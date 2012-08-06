@@ -28,29 +28,39 @@ filelinks = [file for file in shell('find %s -type f -or -type l' % origdir) if 
 def dstpath(path):
     return path.replace(origdir, dstdir)
 
-torm = []
-for origpath in dirnew:
-    if os.path.exists(dstpath(origpath)) and not os.path.isdir(dstpath(origpath)):
-        torm.append(dstpath(origpath))
-for origpath in dirlinks + filelinks:
-    if os.path.exists(dstpath(origpath)) and not os.path.islink(dstpath(origpath)):
-        torm.append(dstpath(origpath))
+def rm_files(paths):
+    if paths:
+        for path in paths:
+            print path
 
-if torm:
-    for item in torm:
-        print item
+        raw_input('About to delete the above: ')
+        for path in paths:
+            if os.path.islink(path):
+                os.unlink(path)
+            elif os.path.isfile(path):
+                os.remove(path)
+            elif os.path.isdir(path):
+                os.rmdir(path)
+            else:
+                raise OSError(path)
 
-    raw_input('About to delete the above: ')
-    for item in torm:
-        if os.path.isfile(item):
-            os.remove(item)
-        elif os.path.isdir(item):
-            os.rmdir(item)
+if len(sys.argv) > 1 and sys.argv[1] == 'clean':
+    rm_files([dstpath(origpath) for origpath in dirlinks + filelinks if os.path.lexists(dstpath(origpath))])
+else:
+    torm = []
+    for origpath in dirnew:
+        if os.path.exists(dstpath(origpath)) and not os.path.isdir(dstpath(origpath)):
+            torm.append(dstpath(origpath))
+    for origpath in dirlinks + filelinks:
+        if os.path.exists(dstpath(origpath)) and not os.path.islink(dstpath(origpath)):
+            torm.append(dstpath(origpath))
 
-for origpath in dirnew:
-    if not os.path.exists(dstpath(origpath)):
-        os.mkdir(dstpath(origpath))
+    rm_files(torm)
 
-for origpath in dirlinks + filelinks:
-    if not os.path.exists(dstpath(origpath)):
-        os.symlink(origpath, dstpath(origpath))
+    for origpath in dirnew:
+        if not os.path.exists(dstpath(origpath)):
+            os.mkdir(dstpath(origpath))
+
+    for origpath in dirlinks + filelinks:
+        if not os.path.exists(dstpath(origpath)):
+            os.symlink(origpath, dstpath(origpath))
