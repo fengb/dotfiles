@@ -1,0 +1,56 @@
+#!/usr/bin/env python2
+
+
+import sys
+import os
+
+origdir = os.path.abspath(sys.argv[0] + '/../../home')
+dstdir = os.path.expanduser('~')
+
+import subprocess
+def shell(cmd):
+    p = subprocess.Popen(cmd.split(), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    p.wait()
+    if p.returncode:
+        raise OSError(p.returncode, p.stderr.read())
+    return p.stdout.read().strip().split('\n')
+
+dirlinks = [path.replace('/.link', '') for path in shell('find %s -type f -name .link' % origdir)]
+def dirlinked(path):
+    for dirlink in dirlinks:
+        if path.find(dirlink) == 0:
+            return True
+    return False
+
+dirnew = [dir for dir in shell('find %s -type d' % origdir) if not dirlinked(dir)]
+filelinks = [file for file in shell('find %s -type f -or -type l' % origdir) if not dirlinked(file)]
+
+def dstpath(path):
+    return path.replace(origdir, dstdir)
+
+torm = []
+for origpath in dirnew:
+    if os.path.exists(dstpath(origpath)) and not os.path.isdir(dstpath(origpath)):
+        torm.append(dstpath(origpath))
+for origpath in dirlinks + filelinks:
+    if os.path.exists(dstpath(origpath)) and not os.path.islink(dstpath(origpath)):
+        torm.append(dstpath(origpath))
+
+if torm:
+    for item in torm:
+        print item
+
+    raw_input('About to delete the above: ')
+    for item in torm:
+        if os.path.isfile(item):
+            os.remove(item)
+        elif os.path.isdir(item):
+            os.rmdir(item)
+
+for origpath in dirnew:
+    if not os.path.exists(dstpath(origpath)):
+        os.mkdir(dstpath(origpath))
+
+for origpath in dirlinks + filelinks:
+    if not os.path.exists(dstpath(origpath)):
+        os.symlink(origpath, dstpath(origpath))
