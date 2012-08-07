@@ -18,7 +18,7 @@ def shell(cmd):
 dirlinks = [path.replace('/.link', '') for path in shell('find %s -type f -name .link' % origdir)]
 def dirlinked(path):
     for dirlink in dirlinks:
-        if path.find(dirlink) == 0:
+        if path.startswith(dirlink + '/'):
             return True
     return False
 
