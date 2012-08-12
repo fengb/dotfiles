@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python
 
 
 import sys
@@ -10,15 +10,15 @@ dstdir = os.path.expanduser('~')
 import subprocess
 def shell(cmd):
     p = subprocess.Popen(cmd.split(), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    p.wait()
+    (stdout, stderr) = p.communicate()
     if p.returncode:
-        raise OSError(p.returncode, p.stderr.read())
-    return p.stdout.read().strip().split('\n')
+        raise OSError(p.returncode, stderr)
+    return stdout.decode('utf-8').strip().split('\n')
 
 dirlinks = [path.replace('/.link', '') for path in shell('find %s -type f -name .link' % origdir)]
 def dirlinked(path):
     for dirlink in dirlinks:
-        if path.startswith(dirlink + '/'):
+        if path == dirlink or path.startswith(dirlink + '/'):
             return True
     return False
 
@@ -31,9 +31,13 @@ def dstpath(path):
 def rm_files(paths):
     if paths:
         for path in paths:
-            print path
+            print(path)
 
-        raw_input('About to delete the above: ')
+        try:
+            raw_input('About to delete the above: ')
+        except NameError:
+            input('About to delete the above: ')
+
         for path in paths:
             if os.path.islink(path):
                 os.unlink(path)
