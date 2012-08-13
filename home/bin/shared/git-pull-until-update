@@ -1,0 +1,12 @@
+#!/bin/sh
+
+
+while true; do
+  val="`git pull`"
+  if [[ "$val" != Already* ]]; then
+    echo $val
+    break
+  fi
+
+  sleep 10
+done

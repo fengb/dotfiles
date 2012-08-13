@@ -1,0 +1,11 @@
+#!/bin/bash
+
+
+if [ -z $1 ]; then
+  git branch | sed 's;^\** *;;'
+elif [ "$1" = -a ]; then
+  git branch -a | sed 's;^\** *;;'
+else
+  remote="$1"
+  git branch -r | grep "^ *$remote" | sed "s;^ *$remote/;;"
+fi

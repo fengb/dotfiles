@@ -1,0 +1,5 @@
+#!/bin/bash
+
+
+git tag -d `git tag`
+git fetch -t
