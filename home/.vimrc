@@ -16,3 +16,5 @@ set directory=~/.vimtmp
 
 set list
 set listchars=tab:>-,trail:.
+
+set hlsearch
