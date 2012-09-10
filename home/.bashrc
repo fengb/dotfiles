@@ -39,6 +39,9 @@ export EDITOR=/usr/bin/vi
 export LC_COLLATE=C
 
 export PATH="`find -L ~/bin -type d -not -path "*/.*/*" -not -name ".*" | tr '\n' ':'`$PATH"
+if type gem >&/dev/null 2>&1; then
+  export GEM_HOME="`gem env | grep $HOME | sed 's/ *- *//'`"
+fi
 
 if [ "`uname`" = Linux ]; then
   alias "ls=ls --color"
