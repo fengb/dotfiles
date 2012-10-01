@@ -50,8 +50,8 @@ else
 fi
 
 local script
-for script in /etc/bash_completion ~/.bashrc_local; do
-  [ -e "$script" ] && . "$script"
+for script in /etc/bash_completion ~/.bash_completion/* ~/.bashrc_local; do
+  [ -r "$script" ] && . "$script"
 done
 
 # Make bash check its window size after a process completes
