@@ -40,7 +40,7 @@ export LC_COLLATE=C
 
 export PATH="`find -L ~/bin -type d -not -path "*/.*/*" -not -name ".*" | tr '\n' ':'`$PATH"
 if command -v gem >&/dev/null 2>&1; then
-  export GEM_HOME=`gem env | sed -e '/INSTALLATION/!d' -e 's/.*: //'`
+  export GEM_HOME=`gem env | sed -e "\;- $HOME;!d" -e 's/.*- //'`
 fi
 
 if [ "`uname`" = Linux ]; then
