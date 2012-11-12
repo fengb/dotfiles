@@ -50,7 +50,7 @@ else
 fi
 
 local script
-for script in /etc/bash_completion ~/.bash_completion/* ~/.bashrc_local; do
+for script in ~/.bash_completion/* ~/.bashrc_local; do
   [ -r "$script" ] && . "$script"
 done
 
