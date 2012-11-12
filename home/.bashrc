@@ -2,6 +2,7 @@
 [ -z "$PS1" ] && return
 
 apply() {
+local DIR=`cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd`
 
 local user='\u'
 local host='\h'
@@ -38,7 +39,7 @@ export PS1="${user}@${cred}${host}${creset}:${cbblu}${path}${creset}\$ "
 export EDITOR=/usr/bin/vi
 export LC_COLLATE=C
 
-export PATH="`find -L ~/bin -type d -not -path "*/.*/*" -not -name ".*" | tr '\n' ':'`$PATH"
+export PATH="`find -L $DIR/bin -type d -not -path "*/.*/*" -not -name ".*" | tr '\n' ':'`$PATH"
 if command -v gem >&/dev/null 2>&1; then
   export GEM_HOME=`gem env | sed -e "\;- $HOME;!d" -e 's/.*- //'`
 fi
@@ -50,7 +51,7 @@ else
 fi
 
 local script
-for script in ~/.bash_completion/* ~/.bashrc_local; do
+for script in $DIR/.bash_completion/* $DIR/.bashrc_local; do
   [ -r "$script" ] && . "$script"
 done
 
