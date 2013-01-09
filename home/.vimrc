@@ -1,7 +1,7 @@
 syntax on
-colors ron
+colors ir_black
 
-set nu
+set number
 
 set tabstop=8
 set shiftwidth=2
