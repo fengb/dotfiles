@@ -17,4 +17,5 @@ set directory=~/.vimtmp
 set list
 set listchars=tab:>-,trail:.
 
+set colorcolumn=81
 set hlsearch
