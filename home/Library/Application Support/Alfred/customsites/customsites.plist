@@ -46,7 +46,7 @@
 		<key>text</key>
 		<string>Search SEC Edgar with '{query}'</string>
 		<key>url</key>
-		<string>http://sec.gov/cgi-bin/browse-edgar?owner=exclude&amp;Find=Find+Companies&amp;action=getcompany&amp;CIK={query}</string>
+		<string>http://www.sec.gov/cgi-bin/browse-edgar?owner=exclude&amp;Find=Find+Companies&amp;action=getcompany&amp;CIK={query}</string>
 		<key>utf8</key>
 		<false/>
 	</dict>
