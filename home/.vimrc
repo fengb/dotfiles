@@ -19,3 +19,5 @@ set listchars=tab:>-,trail:.
 
 set colorcolumn=81
 set hlsearch
+
+call pathogen#infect()
