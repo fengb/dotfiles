@@ -19,4 +19,6 @@ set listchars=tab:>-,trail:.
 set colorcolumn=81
 set hlsearch
 
+let g:netrw_dirhistmax=0
+
 call pathogen#infect()
