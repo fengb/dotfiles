@@ -25,12 +25,9 @@ else
   export EDITOR=vi
 fi
 
-if ! exist ack && exist ack-grep; then
-  alias "ack=ack-grep"
-fi
-
-if exist gem; then
-  export GEM_HOME=`gem env | sed -e "\;- $HOME;!d" -e 's/.*- //'`
+if exist ruby; then
+  local rubyver=`ruby -v | cut -c6-8`
+  export GEM_HOME=$HOME/.gem/ruby/$rubyver
 fi
 
 local script
