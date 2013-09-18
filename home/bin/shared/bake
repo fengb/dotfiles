@@ -1,6 +1,8 @@
 #!/bin/bash
-# bake - Bash Make - v0.1.1 - https://github.com/fengb/bake
+# bake - Bash Make - v0.2.0dev - https://github.com/fengb/bake
 
+
+unset secret
 
 taskdir=Bakefile
 default={default}
@@ -9,17 +11,19 @@ newline='
 
 
 taskfile() {
-  if [ -z "$1" ]; then
-    echo "$taskdir/$default"
-  elif [ -d "$taskdir/$1" ]; then
-    echo "$taskdir/$1/$default"
-  elif [ -e "$taskdir/$1" ]; then
-    echo "$taskdir/$1"
-  elif [[ "$1" == */* ]]; then
-    echo "$taskdir/$1".*
-  else
-    find $taskdir -name "$1" -or -name "$1.*"
-  fi
+  while read task; do
+    if [ -z "$task" ]; then
+      echo "$taskdir/$default"
+    elif [ -d "$taskdir/$task" ]; then
+      echo "$taskdir/$task/$default"
+    elif [ -e "$taskdir/$task" ]; then
+      echo "$taskdir/$task"
+    elif [[ "$task" == */* ]]; then
+      echo "$taskdir/$task".*
+    else
+      find $taskdir -type f -name "$task" -or -name "$task.*" -or -path "*/$task/$default"
+    fi
+  done
 }
 
 
@@ -31,15 +35,23 @@ taskname() {
 
 
 desc() {
-  file=`taskfile $task`
-  if [ ! -x "$file" ]; then
-    echo "!!  not executable"
-  elif grep -q '^ *$BAKE' "$file"; then
-    echo -n "->  "
-    sed -e '/^ *$BAKE/!d' -e 's;^ *$BAKE *\([^ ]*\).*$;\1;' "$file" | tr "\n" ' ' | sed 's/ *$//'
-  else
-    sed -e '/###/!d' -e 's/^### */##  /' "$file"
-  fi
+  while read file; do
+    if [ ! -x "$file" ]; then
+      echo "!!  not executable"
+    elif grep -q '###' "$file"; then
+      sed -e '/###/!d' -e 's/^### */##  /' "$file"
+    else
+      deps=$(sed -e "s;&&;\\$newline;g" "$file"    \
+           | sed -e '/^ *$BAKE/!d'                 \
+                 -e '/^ *$BAKE *-s/d'              \
+                 -e 's;^ *$BAKE *\([^ ]*\).*$;\1;' \
+                 -e '/^$/d'                        \
+           | tr "\n" ' ')
+      if [ -n "$deps" ]; then
+        echo -n "->  $deps"
+      fi
+    fi
+  done
 }
 
 
@@ -47,13 +59,16 @@ help() {
   tasks=`grep --recursive --files-without-match ==-==-== "$taskdir"| sort | taskname`
   maxlength=`awk '{ if ( length > L ) { L=length} }END{ print L}' <<<"$tasks"`
   for task in $tasks; do
-    printf "%-${maxlength}s  %s\n" "$task" "`desc "$task"`"
+    printf "%-${maxlength}s  %s\n" "$task" "`taskfile <<<"$task" | desc`"
   done
 }
 
 
-while getopts "hb:" opt; do
+while getopts "shb:" opt; do
   case $opt in
+    s)
+      secret=true
+      ;;
     b)
       if [ ! -d "$OPTARG" ]; then
         echo "-bake: $OPTARG: taskdir not found" >&2
@@ -93,7 +108,7 @@ if [ -n "$cmd" ]; then
 fi
 
 
-file=`taskfile $1`
+file=`taskfile <<<"$1"`
 if [[ "$file" == *$newline* ]]; then
   echo "-bake: $1: task ambiguous" >&2
   exit 1
@@ -113,5 +128,5 @@ fi
 
 
 shift
-echo Baking "'`taskname <<<$file`'"
+[[ -n "$secret" ]] || echo Baking "'`taskname <<<$file`'"
 BAKE="bash $0" exec "$file" $@
