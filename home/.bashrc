@@ -10,7 +10,9 @@ local DIR=`cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd`
 
 export PS1='\u@\[\e[0;35m\]\h\[\e[0m\]:\[\e[1;34m\]\W\[\e[0m\]$ '
 export LC_COLLATE=C
-export PATH="`find -L $DIR/bin -type d -not -path "*/.*/*" -not -name ".*" | xargs readlink | tr '\n' ':'`$PATH"
+for dir in `find -L $DIR/bin -type d -not -path "*/.*/*" -not -name ".*"`; do
+  export PATH="`readlink "$dir" || echo "$dir"`:$PATH"
+done
 
 if [ "`uname`" = Linux ]; then
   alias "ls=ls --color"
