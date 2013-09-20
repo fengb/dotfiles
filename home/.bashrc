@@ -25,6 +25,15 @@ else
   export EDITOR=vi
 fi
 
+if exist ag; then
+  alias "ack=ag"
+elif exist ack-grep; then
+  alias "ack=ack-grep"
+  alias "ag=ack-grep"
+elif exist ack; then
+  alias "ag=ack"
+fi
+
 if exist ruby; then
   local rubyver=`ruby -v | cut -c6-8`
   export GEM_HOME=$HOME/.gem/ruby/$rubyver
