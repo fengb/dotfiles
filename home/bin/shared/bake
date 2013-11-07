@@ -1,8 +1,8 @@
 #!/bin/bash
-# bake - Bash Make - v0.2.0dev - https://github.com/fengb/bake
+# bake - Bash Make - v0.3.0dev - https://github.com/fengb/bake
 
 
-unset secret
+unset quiet
 
 taskdir=Bakefile
 default={default}
@@ -64,10 +64,10 @@ help() {
 }
 
 
-while getopts "shb:" opt; do
+while getopts "qhb:" opt; do
   case $opt in
-    s)
-      secret=true
+    q)
+      quiet=true
       ;;
     b)
       if [ ! -d "$OPTARG" ]; then
@@ -128,5 +128,5 @@ fi
 
 
 shift
-[[ -n "$secret" ]] || echo Baking "'`taskname <<<$file`'"
+[[ -n "$quiet" ]] || echo Baking "'`taskname <<<$file`'"
 BAKE="bash $0" exec "$file" $@
