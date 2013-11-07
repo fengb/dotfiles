@@ -41,7 +41,7 @@ elif exist ack; then
 fi
 
 if exist ruby; then
-  local rubyver=`ruby -v | cut -c6-8`
+  local rubyver=`ruby -v | cut -c6-10`
   export GEM_HOME=$HOME/.gem/ruby/$rubyver
 fi
 
