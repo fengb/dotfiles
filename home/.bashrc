@@ -20,6 +20,10 @@ else
   alias "ls=ls -G"
 fi
 
+if exist /usr/libexec/java_home; then
+  export JAVA_HOME=`/usr/libexec/java_home`
+fi
+
 if exist vim; then
   alias "vi=vim"
   export EDITOR=vim
