@@ -21,7 +21,7 @@ else
 fi
 
 if exist /usr/libexec/java_home; then
-  export JAVA_HOME=`/usr/libexec/java_home`
+  export JAVA_HOME=`/usr/libexec/java_home 2>&-`
 fi
 
 if exist vim; then
