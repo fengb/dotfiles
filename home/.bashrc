@@ -13,6 +13,7 @@ export LC_COLLATE=C
 for dir in `find -L $DIR/bin -type d -not -path "*/.*/*" -not -name ".*"`; do
   export PATH="`readlink "$dir" || echo "$dir"`:$PATH"
 done
+exist brew && BREW_HOME=`brew --prefix`
 
 if [ "`uname`" = Linux ]; then
   alias "ls=ls --color"
@@ -20,7 +21,7 @@ else
   alias "ls=ls -G"
 fi
 
-if exist /usr/libexec/java_home; then
+if [ -e /usr/libexec/java_home ]; then
   export JAVA_HOME=`/usr/libexec/java_home 2>&-`
 fi
 
@@ -40,14 +41,21 @@ elif exist ack; then
   alias "ag=ack"
 fi
 
-if exist ruby; then
+if [ -r $BREW_HOME/share/chruby/chruby.sh ]; then
+  source $BREW_HOME/share/chruby/chruby.sh
+  chruby `chruby | tail -n 1`
+elif exist ruby; then
   local rubyver=`ruby -v | cut -c6-10`
   export GEM_HOME=$HOME/.gem/ruby/$rubyver
 fi
 
+[ -r $BREW_HOME/etc/profile.d/z.sh ] && source $BREW_HOME/etc/profile.d/z.sh
+[ -r $BREW_HOME/include ] && export CPATH=$BREW_HOME/include
+[ -r $BREW_HOME/lib ] && export LIBRARY_PATH=$BREW_HOME/lib
+
 local script
 for script in $DIR/.bash_completion/* $DIR/.bashrc_local; do
-  [ -r "$script" ] && . "$script"
+  [ -r "$script" ] && source "$script"
 done
 
 # Make bash check its window size after a process completes
