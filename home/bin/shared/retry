@@ -1,6 +1,13 @@
 #!/bin/bash
 
 
-while ! $@; do
-  sleep 1
-done
+if [ "$1" == '-n' ]; then
+  shift
+  while $@; do
+    sleep 1
+  done
+else
+  while ! $@; do
+    sleep 1
+  done
+fi
