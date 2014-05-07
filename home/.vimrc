@@ -21,4 +21,4 @@ set hlsearch
 
 let g:netrw_dirhistmax=0
 
-call pathogen#infect()
+execute pathogen#infect()
