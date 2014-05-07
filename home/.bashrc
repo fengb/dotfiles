@@ -43,7 +43,7 @@ fi
 
 if [ -r $BREW_HOME/share/chruby/chruby.sh ]; then
   source $BREW_HOME/share/chruby/chruby.sh
-  chruby `chruby | tail -n 1`
+  source $BREW_HOME/share/chruby/auto.sh
 elif exist ruby; then
   local rubyver=`ruby -v | cut -c6-10`
   export GEM_HOME=$HOME/.gem/ruby/$rubyver
