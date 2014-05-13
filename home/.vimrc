@@ -1,5 +1,6 @@
 syntax on
 colors ir_black
+filetype indent plugin on
 
 set number
 

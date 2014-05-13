@@ -7,3 +7,9 @@
 [submodule "home/.vim/bundle/vim-coffee-script"]
 	path = home/.vim/bundle/vim-coffee-script
 	url = git://github.com/kchmck/vim-coffee-script.git
+[submodule "home/.vim/bundle/vim-json"]
+	path = home/.vim/bundle/vim-json
+	url = git@github.com:elzr/vim-json.git
+[submodule "home/.vim/bundle/vim-emblem"]
+	path = home/.vim/bundle/vim-emblem
+	url = https://github.com/heartsentwined/vim-emblem.git
