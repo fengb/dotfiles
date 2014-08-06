@@ -1,0 +1,4 @@
+#!/bin/bash
+
+git fetch origin +refs/pull/$1/head:refs/origin/pull/$1
+git checkout origin/pull/$1
