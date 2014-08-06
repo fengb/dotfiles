@@ -1,4 +1,12 @@
 #!/bin/sh
 
 
-git branch --merged | grep '^[^*]' | xargs git branch -d
+if [ -n "$1" ]; then
+  remote="$1"
+  tracking=`git rev-parse --abbrev-ref --symbolic-full-name @{u}`
+  branches=`git branch -r --merged | sed -e "\:$remote:!d" -e "\:$tracking:d" -e "s:^ *$remote/::"`
+  git push "$remote" --delete $branches
+else
+  branches=`git branch --merged | grep '^[^*]'`
+  git branch --delete $branches
+fi
