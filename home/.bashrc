@@ -10,10 +10,9 @@ local DIR=`cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd`
 
 export PS1='\u@\[\e[0;35m\]\h\[\e[0m\]:\[\e[1;34m\]\W\[\e[0m\]$ '
 export LC_COLLATE=C
-for dir in `find -L $DIR/bin -type d -not -path "*/.*/*" -not -name ".*"`; do
-  export PATH="`readlink "$dir" || echo "$dir"`:$PATH"
-done
-exist brew && BREW_HOME=`brew --prefix`
+local symlinkpaths=`ls -F $DIR/bin | sed -e '/@$/!d' -e "s:\(.*\)@\$:$DIR/bin/\1:" | tr "\n" ':'`
+export PATH="$DIR/bin:$symlinkpaths:$PATH"
+exist brew && export BREW_HOME=`brew --prefix`
 
 if [ "`uname`" = Linux ]; then
   alias "ls=ls --color"
