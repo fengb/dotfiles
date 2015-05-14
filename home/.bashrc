@@ -10,7 +10,7 @@ local DIR=`cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd`
 
 export PS1='\u@\[\e[0;35m\]\h\[\e[0m\]:\[\e[1;34m\]\W\[\e[0m\]$ '
 export LC_COLLATE=C
-local symlinkpaths=`ls -F $DIR/bin | sed -e '/@$/!d' -e "s:\(.*\)@\$:$DIR/bin/\1:" | tr "\n" ':'`
+local symlinkpaths=`ls -l "$DIR/bin" | sed -e '/->/!d' -e 's/.* -> //' | tr "\n" ':'`
 export PATH="$DIR/bin:$symlinkpaths:$PATH"
 exist brew && export BREW_HOME=`brew --prefix`
 

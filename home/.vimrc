@@ -23,3 +23,9 @@ set hlsearch
 let g:netrw_dirhistmax=0
 
 execute pathogen#infect()
+
+" window navigations
+map <C-h> <C-w>h
+map <C-j> <C-w>j
+map <C-k> <C-w>k
+map <C-l> <C-w>l
