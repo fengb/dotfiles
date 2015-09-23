@@ -40,9 +40,13 @@ elif exist ack; then
   alias "ag=ack"
 fi
 
+if exist n; then
+  export N_PREFIX=/opt/n
+fi
+
 if [ -r $BREW_HOME/share/chruby/chruby.sh ]; then
   source $BREW_HOME/share/chruby/chruby.sh
-  source $BREW_HOME/share/chruby/auto.sh
+  chruby ruby-2.2
 elif exist ruby; then
   local rubyver=`ruby -v | cut -c6-10`
   export GEM_HOME=$HOME/.gem/ruby/$rubyver
@@ -51,6 +55,7 @@ fi
 [ -r $BREW_HOME/etc/profile.d/z.sh ] && source $BREW_HOME/etc/profile.d/z.sh
 [ -r $BREW_HOME/include ] && export CPATH=$BREW_HOME/include
 [ -r $BREW_HOME/lib ] && export LIBRARY_PATH=$BREW_HOME/lib
+[ -r $BREW_HOME/android-sdk ] && export ANDROID_HOME=$BREW_HOME/opt/android-sdk
 
 local script
 for script in $DIR/.bash_completion/* $DIR/.bashrc_local; do
