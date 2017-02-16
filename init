@@ -4,7 +4,7 @@
 import sys
 import os
 
-origdir = os.path.abspath(sys.argv[0] + '/../../home')
+origdir = os.path.abspath(sys.argv[0] + '/../home')
 dstdir = os.path.expanduser('~')
 
 import subprocess
@@ -29,7 +29,7 @@ def dirlinked(path):
     return False
 
 dirnew = set(dir for dir in find(origdir, '-type d') if not dirlinked(dir))
-filelinks = set(file for file in find(origdir, '-type f -print0 -or -type l') if not dirlinked(file))
+filelinks = set(file for file in find(origdir, '-type f') if not dirlinked(file))
 links = dirlinks | filelinks
 
 def dstpath(path):
