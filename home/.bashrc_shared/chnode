@@ -75,17 +75,6 @@ chnode() {
 
 				local search
 				search=(/opt/nodes ~/.nodes ~/.nodenv/versions /usr/local/n/versions ~/.nvm/versions/node)
-				local brewexec brewdir brewcellar
-				
-				if brewexec="$(command -v brew)"; then
-					if brewcellar="$(brew --cellar 2>/dev/null)"; then
-            {
-						  search+=("${brewcellar}"/node) || true
-              search+=("${brewcellar}"/node[0-9]*) || true
-              search+=("${brewcellar}"/node@*) || true
-            } 2>/dev/null
-					fi
-				fi
 
 				local dir nodes
 				[ -n "$ZSH_NAME" ] && setopt localoptions nullglob KSH_ARRAYS
