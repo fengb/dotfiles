@@ -129,4 +129,4 @@ fi
 
 shift
 [[ -n "$quiet" ]] || echo Baking "'`taskname <<<$file`'"
-BAKE="bash $0" exec "$file" $@
+BAKE="bake $0" exec "$file" $@

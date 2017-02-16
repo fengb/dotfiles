@@ -74,4 +74,5 @@ else:
 
     for origpath in links:
         if not os.path.exists(dstpath(origpath)):
+            print origpath, dstpath(origpath)
             os.symlink(origpath, dstpath(origpath))
