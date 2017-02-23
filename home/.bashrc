@@ -25,9 +25,7 @@ else
   alias "ls=ls -G"
 fi
 
-exist ruby && export GEM_HOME="$HOME/.gem/ruby/`ruby -v | cut -c6-10`"
-
-[ -x /usr/libexec/java_home ] && export JAVA_HOME=`/usr/libexec/java_home 2>/dev/null`
+[ -x /usr/libexec/java_home ] && export JAVA_HOME=`/usr/libexec/java_home -F 2>/dev/null`
 
 if exist vim; then
   alias "vi=vim"

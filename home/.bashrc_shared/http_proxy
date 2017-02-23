@@ -1,0 +1,7 @@
+[ -f "$HOME/.hotel/conf.json" ] || return
+
+target_proxy=localhost:2000/proxy.pac
+curl -f -s $target_proxy >/dev/null || return
+
+export http_proxy=$target_proxy
+export HTTP_PROXY=$target_proxy
