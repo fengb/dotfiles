@@ -5,41 +5,28 @@
 #set -x
 
 dir="$(cd "$(dirname "${BASH_SOURCE[0]}")"/home && pwd -P)"
-dirlinks="`find "$dir" -type f -name '.link' | sed -e 's:/.link::'`"
 
 print0() {
   tr $'\r\n' "\0\0"
-}
-
-# Thar be magic
-sep=$'\r'
-esc='\'
-exclusion="`sed -e "s:.*:-not$sep$esc($sep-path$sep&$sep-prune$sep$esc):" <<< "$dirlinks"`"
-xfind() {
-  print0 <<< "$exclusion" | xargs -0 -J {} find "$1" {} "${@:2}"
 }
 
 find_test() {
   print0 | xargs -0 -J {} find {} "$@"
 }
 
-dirnew="`xfind "$dir" -type d`"
-filelinks="`xfind "$dir" -type f`"
-links="$dirlinks"$'\n'"$filelinks"
-
 homize() {
   if [[ "$1" == *$'\n'* ]]; then
-    sed -e "s;$dir;$HOME;" <<< "$1"
+    sed -e "s;$dir;$HOME;" -e "s/.link$//"<<< "$1"
   else
-    echo "${HOME}${src#$dir}"
+    nolink="${src%.link}"
+    echo "${HOME}${nolink#$dir}"
   fi
 }
 
 rm_files() {
   [ -z "$1" ] && return
   sort <<< "$1"
-  echo -n "About to delete the above [enter to continue]: "
-  read
+  read -p "About to delete the above [enter to continue]: "
   echo
 
   print0 <<< "$1" | xargs -0 rm -rf
@@ -47,13 +34,18 @@ rm_files() {
 
 run_log() {
   echo "$@"
-  "#@"
+  "$@"
 }
 
-existing="`homize "$dirnew" | find_test -prune -not -type d`"
-existing+="`homize "$links" | find_test -not -type l`"
+dirlinks="`find "$dir" -type d -name '*.link'`"
+dirnew="`find "$dir" -not \( -path '*.link' -prune \) -type d`"
+filelinks="`find "$dir" -not \( -path '*.link' -prune \) -type f`"
+links="$dirlinks"$'\n'"$filelinks"
 
-rm_files "$existing"
+existdirs="`homize "$dirnew" | find_test -prune -not -type d`"
+existfiles="`homize "$links" | find_test -not -type l`"
+
+rm_files "$existdirs$existfiles"
 
 homize "$dirnew" | while read dst; do
   if [ ! -e "$dst" ]; then
