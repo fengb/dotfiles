@@ -5,6 +5,8 @@
 #set -x
 
 dir="$(cd "$(dirname "${BASH_SOURCE[0]}")"/home && pwd -P)"
+#echo "$(cd "`dirname "${BASH_SOURCE[0]}`" && git rev-parse --show-toplevel)"
+#exit
 
 print0() {
   tr $'\r\n' "\0\0"
@@ -16,15 +18,13 @@ find_filter() {
   print0 <<< "$files" | xargs -0 -J {} find {} -maxdepth 0 "$@"
 }
 
-homize() {
-  src="${1-`cat`}"
+as_home() {
+  sed -e "s;^$dir;$HOME;" -e "s/.link$//"
+}
 
-  if [[ "$src" == *$'\n'* ]]; then
-    sed -e "s;$dir;$HOME;" -e "s/.link$//"<<< "$src"
-  elif [ -n "$src" ]; then
-    nolink="${src%.link}"
-    echo "${HOME}${nolink#$dir}"
-  fi
+as_src() {
+  src="${dir}${1#$HOME}"
+  [ -e "$src" ] && echo "$src" || echo "$src.link"
 }
 
 rm_files() {
@@ -44,23 +44,23 @@ concat() {
 }
 
 run_log() {
-  echo "$@"
-  "$@"
+  echo "$@" && "$@"
 }
 
-dirnew="`find "$dir" -not \( -path '*.link' -prune \) -type d | homize`"
-links="`find "$dir" \( -type d -name '*.link' -prune \) -or -type f`"
+#find -L "$HOME" -not \( -not -path "$HOME" -prune \) -type l
+
+dirnew="`find "$dir" -not \( -path '*.link' -prune \) -type d | as_home`"
+links="`find "$dir" \( -type d -name '*.link' -prune \) -or -type f | as_home`"
 
 existdirs="`find_filter -not -type d <<< "$dirnew"`"
-existlinks="`homize "$links" | find_filter -not -type l`"
+existlinks="`find_filter -not -type l <<< "$links"`"
 
 concat "$existdirs" "$existlinks" | rm_files
 
-while read tgt; do
-  [ ! -e "$tgt" ] && run_log mkdir -p "$tgt"
+while read -r dst; do
+  [ ! -e "$dst" ] && run_log mkdir -p "$dst"
 done <<< "$dirnew"
 
-while read src; do
-  dst="`homize "$src"`"
-  [ ! -e "$dst" ] && run_log ln -s "$src" "$dst"
+while read -r dst; do
+  [ ! -e "$dst" ] && run_log ln -s "`as_src "$dst"`" "$dst"
 done <<< "$links"
