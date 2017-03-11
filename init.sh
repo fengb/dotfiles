@@ -10,26 +10,37 @@ print0() {
   tr $'\r\n' "\0\0"
 }
 
-find_test() {
-  print0 | xargs -0 -J {} find {} "$@"
+find_filter() {
+  files="`cat`"
+  [ -z "$files" ] && return
+  print0 <<< "$files" | xargs -0 -J {} find {} -maxdepth 0 "$@"
 }
 
 homize() {
-  if [[ "$1" == *$'\n'* ]]; then
-    sed -e "s;$dir;$HOME;" -e "s/.link$//"<<< "$1"
-  else
+  src="${1-`cat`}"
+
+  if [[ "$src" == *$'\n'* ]]; then
+    sed -e "s;$dir;$HOME;" -e "s/.link$//"<<< "$src"
+  elif [ -n "$src" ]; then
     nolink="${src%.link}"
     echo "${HOME}${nolink#$dir}"
   fi
 }
 
 rm_files() {
-  [ -z "$1" ] && return
-  sort <<< "$1"
+  files="${1-`cat`}"
+  [ -z "$files" ] && return
+  sort <<< "$files"
   read -p "About to delete the above [enter to continue]: "
   echo
 
-  print0 <<< "$1" | xargs -0 rm -rf
+  print0 <<< "$files" | xargs -0 rm -rf
+}
+
+concat() {
+  for arg in "$@"; do
+    [ -n "$arg" ] && echo "$arg"
+  done
 }
 
 run_log() {
@@ -37,25 +48,19 @@ run_log() {
   "$@"
 }
 
-dirlinks="`find "$dir" -type d -name '*.link'`"
-dirnew="`find "$dir" -not \( -path '*.link' -prune \) -type d`"
-filelinks="`find "$dir" -not \( -path '*.link' -prune \) -type f`"
-links="$dirlinks"$'\n'"$filelinks"
+dirnew="`find "$dir" -not \( -path '*.link' -prune \) -type d | homize`"
+links="`find "$dir" \( -type d -name '*.link' -prune \) -or -type f`"
 
-existdirs="`homize "$dirnew" | find_test -prune -not -type d`"
-existfiles="`homize "$links" | find_test -not -type l`"
+existdirs="`find_filter -not -type d <<< "$dirnew"`"
+existlinks="`homize "$links" | find_filter -not -type l`"
 
-rm_files "$existdirs$existfiles"
+concat "$existdirs" "$existlinks" | rm_files
 
-homize "$dirnew" | while read dst; do
-  if [ ! -e "$dst" ]; then
-    run_log mkdir -p "$dst"
-  fi
-done
+while read tgt; do
+  [ ! -e "$tgt" ] && run_log mkdir -p "$tgt"
+done <<< "$dirnew"
 
 while read src; do
   dst="`homize "$src"`"
-  if [ ! -e "$dst" ]; then
-    run_log ln -s "$src" "$dst"
-  fi
+  [ ! -e "$dst" ] && run_log ln -s "$src" "$dst"
 done <<< "$links"
