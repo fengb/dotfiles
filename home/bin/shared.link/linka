@@ -4,8 +4,12 @@
 #exec 3>&2 2>trace.log
 #set -x
 
-base="$(cd "`dirname "${BASH_SOURCE[0]}"`" && git rev-parse --show-toplevel)"
+base="$(git -C "`dirname "${BASH_SOURCE[0]}"`" rev-parse --show-toplevel)"
 dir="$base/home"
+
+abspath() {
+  [[ $1 = /* ]] && echo "$1" || echo "$PWD/${1#./}"
+}
 
 print0() {
   tr $'\r\n' "\0\0"
@@ -14,22 +18,33 @@ print0() {
 find_filter() {
   files="`cat`"
   [ -z "$files" ] && return
+
   if [ "$1" = "-L" ]; then
-    arg="$1"
+    mod="$1"
     shift
-    print0 <<< "$files" | xargs -0 -J {} find "$arg" {} -maxdepth 0 "$@" 2> /dev/null
-  else
-    print0 <<< "$files" | xargs -0 -J {} find {} -maxdepth 0 "$@" 2> /dev/null
   fi
+
+  print0 <<< "$files" | xargs -0 -J {} find $mod {} -maxdepth 0 "$@" 2>/dev/null
 }
 
 as_home() {
   sed -e "s;^$dir;$HOME;" -e "s/.link$//"
 }
 
-as_src() {
-  src="${dir}${1#$HOME}"
-  [ -e "$src" ] && echo "$src" || echo "$src.link"
+as_sync() {
+  [[ "$1" != "$HOME"* ]] && exit_message "'$1' not in \$HOME"
+  [[ "$1" == "$dir"* ]] && exit_message "'$1' already synced"
+
+  sync="${dir}${1#$HOME}"
+  if [ -f "$1" ]; then
+    echo "$sync"
+  elif [ -d "$1" ]; then
+    echo "$sync.link"
+  elif [ -e "$sync" ]; then
+    echo "$sync"
+  else
+    echo "$sync.link"
+  fi
 }
 
 rm_files() {
@@ -53,24 +68,82 @@ run_log() {
 }
 
 git_historic_files() {
-  git log --pretty=format: --name-only --diff-filter=A | sed -e '/^ *$/d' -e "s;^;$base/;" | sort -u
+  if [ -n "$1" ]; then
+    arg="--max-count=$1"
+  fi
+
+  git -C "$base" log --pretty=format: --name-only $arg | sed -e '/^ *$/d' -e "s;^;$base/;" | sort -u
 }
 
 #find -L "$HOME" -not \( -not -path "$HOME" -prune \) -type l
 
-dirnew="`find "$dir" -not \( -path '*.link' -prune \) -type d | as_home`"
-links="`find "$dir" \( -type d -name '*.link' -prune \) -or -type f | as_home`"
+exit_message() {
+  echo "$1" >&2
+}
 
-existdirs="`find_filter -not -type d <<< "$dirnew"`"
-existlinks="`find_filter -not -type l <<< "$links"`"
-brokelinks="`git_historic_files | as_home | find_filter -L -maxdepth 0 -type l`"
+[[ "${BASH_SOURCE[0]}" != "${0}" ]] && return
 
-rm_files "$existdirs" "$existlinks" "$brokelinks"
+exit_message() {
+  echo "$1" >&2
+  exit 1
+}
 
-while read -r dst; do
-  [ ! -e "$dst" ] && run_log mkdir -p "$dst"
-done <<< "$dirnew"
+pwd() {
+  echo "$base"
+}
 
-while read -r dst; do
-  [ ! -e "$dst" ] && run_log ln -s "`as_src "$dst"`" "$dst"
-done <<< "$links"
+install() {
+  dirnew="`find "$dir" -not \( -path '*.link' -prune \) -type d | as_home`"
+  links="`find "$dir" \( -type d -name '*.link' -prune \) -or -type f | as_home`"
+
+
+  existdirs="`find_filter -not -type d <<< "$dirnew"`"
+  existlinks="`find_filter -not -type l <<< "$links"`"
+  brokelinks="`git_historic_files | as_home | find_filter -L -type l`"
+
+  rm_files "$existdirs" "$existlinks" "$brokelinks"
+
+  while read -r dst; do
+    [ ! -e "$dst" ] && mkdir -v -p "$dst"
+  done <<< "$dirnew"
+
+  while read -r dst; do
+    [ ! -e "$dst" ] && ln -v -s "`as_sync "$dst"`" "$dst"
+  done <<< "$links"
+}
+
+sync() {
+  file="`abspath $1`"
+  [ ! -e "$file" ] && exit_message "'$file' does not exist"
+  [ -L "$file" ] && exit_message "'$file' is a symlink"
+
+  sync="`as_sync "$file"`"
+  exit
+  run_log mkdir -p "${sync%/*}"
+  run_log mv "$file" "$sync"
+  run_log ln -s "$sync" "$file"
+}
+
+reify() {
+  file="`abspath $1`"
+  [ ! -L "$file" ] && exit_message "'$file' is not a symlink"
+  sync="`readlink "$file"`"
+  [[ "$sync" != "$dir"* ]] && exit_message "'$file' is not synced"
+  [ ! -e "$sync" ] && exit_message "'$sync' is not found"
+  run_log rm "$file"
+  run_log cp -R "$sync" "$file"
+}
+
+case "$1" in
+  pwd|install|sync|reify)
+    command="$1"
+    shift
+    "$command" "$@"
+    ;;
+  "")
+    install
+    ;;
+  *)
+    exit_message "Command '$1' not found"
+    ;;
+esac
