@@ -6,9 +6,8 @@
 
 set -euo pipefail
 
-base="$(git -C "`dirname "${BASH_SOURCE[0]}"`" rev-parse --show-toplevel)"
-LINKA="$base/home"
-EXCLUDE=$'.*/(\.keep|\.DS_Store)$'
+LINKA="$(git -C "`dirname "${BASH_SOURCE[0]}"`" rev-parse --show-toplevel)"
+EXCLUDE=$'.*/(\.keep|\.DS_Store|\.git|LICENSE)$'
 
 to_home() {
   sed -e "s;^$LINKA;$HOME;" -e "s/.link$//"
@@ -90,7 +89,7 @@ git_historic_files() {
     arg="--max-count=$1"
   fi
 
-  git -C "$base" log --pretty=format: --name-only ${arg-} | sed -e '/^ *$/d' -e "s;^;$base/;" | sort -u
+  git -C "$LINKA" log --pretty=format: --name-only ${arg-} | sed -e '/^ *$/d' -e $'s;\.link/.*;;' -e "s;^;$LINKA/;" | sort -u
 }
 
 exit_message() {
@@ -149,7 +148,7 @@ case "${1-}" in
     "$command" "$@"
     ;;
   pwd)
-    echo "$base"
+    echo "$LINKA"
     ;;
   "")
     install
