@@ -7,7 +7,7 @@
 set -euo pipefail
 
 base="$(git -C "`dirname "${BASH_SOURCE[0]}"`" rev-parse --show-toplevel)"
-dir="$base/home"
+LINKA="$base/home"
 
 abspath() {
   [ ! -e "$1" ] && exit_message "'$1' does not exist"
@@ -31,14 +31,14 @@ find_filter() {
 }
 
 to_home() {
-  sed -e "s;^$dir;$HOME;" -e "s/.link$//"
+  sed -e "s;^$LINKA;$HOME;" -e "s/.link$//"
 }
 
 as_sync() {
   [[ "$1" != "$HOME"* ]] && exit_message "'$1' not in \$HOME"
-  [[ "$1" == "$dir"* ]] && exit_message "'$1' already synced"
+  [[ "$1" == "$LINKA"* ]] && exit_message "'$1' already synced"
 
-  sync="${dir}${1#$HOME}"
+  sync="${LINKA}${1#$HOME}"
   if [ -f "$1" ]; then
     echo "$sync"
   elif [ -d "$1" ]; then
@@ -68,7 +68,8 @@ rm_files() {
 }
 
 run_log() {
-  echo "$@" && "$@"
+  sed -e "s;$LINKA;\$LINKA;" -e "s;$HOME;\$HOME;" <<< "$@"
+  "$@"
 }
 
 git_historic_files() {
@@ -93,8 +94,8 @@ exit_message() {
 }
 
 install() {
-  dirnew="`find "$dir" -not \( -path '*.link' -prune \) -type d | to_home`"
-  links="`find "$dir" \( -type d -name '*.link' -prune \) -or -type f | to_home`"
+  dirnew="`find "$LINKA" -not \( -path '*.link' -prune \) -type d | to_home`"
+  links="`find "$LINKA" \( -type d -name '*.link' -prune \) -or -type f | to_home`"
 
   existdirs="`find_filter -not -type d <<< "$dirnew"`"
   existlinks="`find_filter -not -type l <<< "$links"`"
@@ -103,11 +104,11 @@ install() {
   rm_files "$existdirs" "$existlinks" "$brokelinks"
 
   while read -r dst; do
-    [ ! -e "$dst" ] && mkdir -v -p "$dst"
+    [ ! -e "$dst" ] && run_log mkdir -p "$dst"
   done <<< "$dirnew"
 
   while read -r dst; do
-    [ ! -e "$dst" ] && ln -v -s "`as_sync "$dst"`" "$dst"
+    [ ! -e "$dst" ] && run_log ln -s "`as_sync "$dst"`" "$dst"
   done <<< "$links"
 }
 
@@ -121,18 +122,18 @@ sync() {
   run_log ln -s "$sync" "$file"
 }
 
-reify() {
+unsync() {
   file="`abspath $1`"
   [ ! -L "$file" ] && exit_message "'$1' is not a symlink"
   sync="`readlink "$file"`"
-  [[ "$sync" != "$dir"* ]] && exit_message "'$1' is not synced"
+  [[ "$sync" != "$LINKA"* ]] && exit_message "'$1' is not synced"
   [ ! -e "$sync" ] && exit_message "'$sync' is not found"
-  run_log rm "$1"
-  run_log cp -R "$sync" "$1"
+  rm "$1"
+  run_log mv "$sync" "$1"
 }
 
 case "${1-}" in
-  install|sync|reify)
+  install|sync|unsync)
     command="$1"
     shift
     "$command" "$@"
