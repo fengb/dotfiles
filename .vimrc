@@ -27,11 +27,11 @@ map <C-k> <C-w>k
 map <C-l> <C-w>l
 
 call plug#begin('~/.vim/plugged')
-Plug 'https://github.com/kchmck/vim-coffee-script.git'
-Plug 'https://github.com/elzr/vim-json.git'
-Plug 'https://github.com/slim-template/vim-slim.git'
-Plug 'https://github.com/digitaltoad/vim-pug.git'
-Plug 'https://github.com/pangloss/vim-javascript.git'
-Plug 'https://github.com/mxw/vim-jsx.git'
-Plug 'https://github.com/elixir-lang/vim-elixir.git', { 'commit': '85593b118bae081538943640648e5d57f22f0aba' }
+Plug 'https://github.com/kchmck/vim-coffee-script.git', { 'for': 'coffee' }
+Plug 'https://github.com/elzr/vim-json.git', { 'for': 'json' }
+Plug 'https://github.com/slim-template/vim-slim.git', { 'for': 'slim' }
+Plug 'https://github.com/digitaltoad/vim-pug.git', { 'for': 'pug' }
+Plug 'https://github.com/pangloss/vim-javascript.git', { 'for': 'javascript' }
+Plug 'https://github.com/mxw/vim-jsx.git', { 'for': 'jsx' }
+Plug 'https://github.com/elixir-lang/vim-elixir.git', { 'for': 'elixir', 'commit': '85593b118bae081538943640648e5d57f22f0aba' }
 call plug#end()
