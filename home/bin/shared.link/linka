@@ -8,17 +8,22 @@ set -euo pipefail
 
 base="$(git -C "`dirname "${BASH_SOURCE[0]}"`" rev-parse --show-toplevel)"
 LINKA="$base/home"
+EXCLUDE=$'.*/(\.keep|\.DS_Store)$'
 
 to_home() {
   sed -e "s;^$LINKA;$HOME;" -e "s/.link$//"
 }
 
+tgt_find() {
+  find -E "$LINKA" -not \( -regex "$EXCLUDE" -prune \) \( "$@" \) | to_home
+}
+
 tgt_dirs() {
-  find "$LINKA" -not \( -path '*.link' -prune \) -type d | to_home
+  tgt_find -not \( -path '*.link' -prune \) -type d
 }
 
 tgt_links() {
-  find "$LINKA" \( -type d -name '*.link' -prune \) -or -type f -not -name ".keep" | to_home
+  tgt_find \( -path '*.link' -prune \) -or -type f
 }
 
 abspath() {
