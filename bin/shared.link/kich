@@ -6,27 +6,28 @@
 
 set -euo pipefail
 
-LINKA="$(git -C "`dirname "${BASH_SOURCE[0]}"`" rev-parse --show-toplevel)"
-EXCLUDE=$'.*/(\.keep|\.DS_Store|\.git|LICENSE)$'
+: ${KICH_SRC="$(git -C "`dirname "${BASH_SOURCE[0]}"`" rev-parse --show-toplevel)"}
+: ${KICH_TGT="$HOME"}
+: ${KICH_EXCLUDE=$'.*/(\.keep|\.DS_Store|\.git|LICENSE)$'}
 
-to_home() {
-  sed -e "s;^$LINKA;$HOME;" -e "s/.link$//"
+to_tgt() {
+  sed -e "s;^$KICH_SRC;$KICH_TGT;" -e "s/.link$//"
 }
 
-tgt_find() {
-  find -E "$LINKA" -not \( -regex "$EXCLUDE" -prune \) \( "$@" \) | to_home
+src_find() {
+  find -E "$KICH_SRC" -not \( -regex "$KICH_EXCLUDE" -prune \) \( "$@" \)
 }
 
 tgt_dirs() {
-  tgt_find -not \( -path '*.link' -prune \) -type d
+  src_find -not \( -path '*.link' -prune \) -type d | to_tgt
 }
 
 tgt_links() {
-  tgt_find \( -path '*.link' -prune \) -or -type f
+  src_find \( -path '*.link' -prune \) -or -type f | to_tgt
 }
 
 abspath() {
-  [ ! -e "$1" ] && exit_message "'$1' does not exist"
+  [ ! -e "$1" ] && error "'$1' does not exist"
   echo "$(cd "$(dirname "$1")" && pwd)/$(basename "$1")"
 }
 
@@ -46,11 +47,11 @@ find_filter() {
   print0 <<< "$files" | xargs -0 -J {} find ${mod-} {} -maxdepth 0 "$@" 2>/dev/null || true
 }
 
-sync_from() {
-  [[ "$1" != "$HOME"* ]] && exit_message "'$1' not in \$HOME"
-  [[ "$1" == "$LINKA"* ]] && exit_message "'$1' already synced"
+src_from() {
+  [[ "$1" != "$KICH_TGT"* ]] && error "'$1' not in \$KICH_TGT"
+  [[ "$1" == "$KICH_SRC"* ]] && error "'$1' already synced"
 
-  sync="${LINKA}${1#$HOME}"
+  sync="${KICH_SRC}${1#$KICH_TGT}"
   if [ -f "$1" ]; then
     echo "$sync"
   elif [ -d "$1" ]; then
@@ -80,7 +81,7 @@ rm_files() {
 }
 
 run_log() {
-  sed -e "s;$LINKA;\$LINKA;" -e "s;$HOME;\$HOME;" <<< "$@"
+  sed -e "s;$KICH_SRC;\$KICH_SRC;" -e "s;$KICH_TGT;\$KICH_TGT;" <<< "$@"
   "$@"
 }
 
@@ -89,21 +90,22 @@ git_historic_files() {
     arg="--max-count=$1"
   fi
 
-  git -C "$LINKA" log --pretty=format: --name-only ${arg-} | sed -e '/^ *$/d' -e $'s;\.link/.*;;' -e "s;^;$LINKA/;" | sort -u
+  git -C "$KICH_SRC" log --pretty=format: --name-only ${arg-} | sed -e '/^ *$/d' -e $'s;\.link/.*;;' -e "s;^;$KICH_SRC/;" | sort -u
 }
 
-exit_message() {
-  echo "$1" >&2
+error() {
+  echo "kich: $1" >&2
   exit 1
 }
 
 install() {
   # Can't assign ${:=} in herestring <<<
-  : "${tgt_dirs=`tgt_dirs`} ${tgt_links=`tgt_links`}"
+  : ${tgt_dirs=`tgt_dirs`}
+  : ${tgt_links=`tgt_links`}
 
   existdirs="`find_filter -not -type d <<< "$tgt_dirs"`"
   existlinks="`find_filter -not -type l <<< "$tgt_links"`"
-  brokelinks="`git_historic_files | to_home | find_filter -L -type l`"
+  brokelinks="`git_historic_files | to_tgt | find_filter -L -type l`"
 
   rm_files "$existdirs" "$existlinks" "$brokelinks"
 
@@ -113,47 +115,48 @@ install() {
   done <<< "$tgt_dirs"
 
   while read -r dst; do
-    [ ! -e "$dst" ] && run_log ln -s "`sync_from "$dst"`" "$dst"
+    [ ! -e "$dst" ] && run_log ln -s "`src_from "$dst"`" "$dst"
   done <<< "$tgt_links"
 }
 
 sync() {
-  file="`abspath $1`"
-  [ -L "$file" ] && exit_message "'$1' is a symlink"
+  tgt="`abspath $1`"
+  [ -L "$tgt" ] && error "'$1' is a symlink"
 
-  sync="`sync_from "$file"`"
-  mkdir -p "${sync%/*}"
-  run_log mv "$file" "$sync"
-  run_log ln -s "$sync" "$file"
+  src="`src_from "$tgt"`"
+  mkdir -p "${src%/*}"
+  run_log mv "$tgt" "$src"
+  run_log ln -s "$src" "$tgt"
 }
 
 unsync() {
-  file="`abspath $1`"
-  [ ! -L "$file" ] && exit_message "'$1' is not a symlink"
-  sync="`readlink "$file"`"
-  [[ "$sync" != "$LINKA"* ]] && exit_message "'$1' is not synced"
-  [ ! -e "$sync" ] && exit_message "'$sync' is not found"
+  tgt="`abspath $1`"
+  [ ! -L "$tgt" ] && error "'$1' is not a symlink"
+  src="`readlink "$tgt"`"
+  [[ "$src" != "$KICH_SRC"* ]] && error "'$1' is not synced"
+  [ ! -e "$src" ] && error "'$src' is not found"
   rm "$1"
-  run_log mv "$sync" "$1"
+  run_log mv "$src" "$1"
 }
 
 uninstall() {
   rm_files "${tgt_links=`tgt_links`}"
 }
 
+src() {
+  echo "$KICH_SRC"
+}
+
 case "${1-}" in
-  install|sync|unsync|uninstall)
+  install|sync|unsync|uninstall|src)
     command="$1"
     shift
     "$command" "$@"
-    ;;
-  pwd)
-    echo "$LINKA"
     ;;
   "")
     install
     ;;
   *)
-    exit_message "Command '$1' not found"
+    error "'$1' is not a command"
     ;;
 esac
