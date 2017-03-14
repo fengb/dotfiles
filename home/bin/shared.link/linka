@@ -95,7 +95,7 @@ exit_message() {
 
 install() {
   dirnew="`find "$LINKA" -not \( -path '*.link' -prune \) -type d | to_home`"
-  links="`find "$LINKA" \( -type d -name '*.link' -prune \) -or -type f | to_home`"
+  links="`find "$LINKA" \( -type d -name '*.link' -prune \) -or -type f -not -name ".keep" | to_home`"
 
   existdirs="`find_filter -not -type d <<< "$dirnew"`"
   existlinks="`find_filter -not -type l <<< "$links"`"
@@ -104,11 +104,11 @@ install() {
   rm_files "$existdirs" "$existlinks" "$brokelinks"
 
   while read -r dst; do
-    [ ! -e "$dst" ] && run_log mkdir -p "$dst"
+    [ ! -e "$dst" ] && mkdir -p "$dst"
   done <<< "$dirnew"
 
   while read -r dst; do
-    [ ! -e "$dst" ] && run_log ln -s "`as_sync "$dst"`" "$dst"
+    [ ! -e "$dst" ] && ln -s "`as_sync "$dst"`" "$dst"
   done <<< "$links"
 }
 
@@ -117,7 +117,7 @@ sync() {
   [ -L "$file" ] && exit_message "'$1' is a symlink"
 
   sync="`as_sync "$file"`"
-  run_log mkdir -p "${sync%/*}"
+  mkdir -p "${sync%/*}"
   run_log mv "$file" "$sync"
   run_log ln -s "$sync" "$file"
 }
