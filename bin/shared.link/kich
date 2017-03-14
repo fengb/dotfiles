@@ -51,7 +51,7 @@ src_from() {
   [[ "$1" != "$KICH_TGT"* ]] && error "'$1' not in \$KICH_TGT"
   [[ "$1" == "$KICH_SRC"* ]] && error "'$1' already synced"
 
-  sync="${KICH_SRC}${1#$KICH_TGT}"
+  sync="${KICH_SRC}${1#"$KICH_TGT"}"
   if [ -f "$1" ]; then
     echo "$sync"
   elif [ -d "$1" ]; then
@@ -78,11 +78,6 @@ rm_files() {
   echo
 
   print0 <<< "$files" | xargs -0 rm -rf
-}
-
-run_log() {
-  sed -e "s;$KICH_SRC;\$KICH_SRC;" -e "s;$KICH_TGT;\$KICH_TGT;" <<< "$@"
-  "$@"
 }
 
 git_historic_files() {
@@ -115,7 +110,10 @@ install() {
   done <<< "$tgt_dirs"
 
   while read -r dst; do
-    [ ! -e "$dst" ] && run_log ln -s "`src_from "$dst"`" "$dst"
+    if [ ! -e "$dst" ]; then
+      echo "⇋ $dst"
+      ln -s "`src_from "$dst"`" "$dst"
+    fi
   done <<< "$tgt_links"
 }
 
@@ -125,8 +123,8 @@ sync() {
 
   src="`src_from "$tgt"`"
   mkdir -p "${src%/*}"
-  run_log mv "$tgt" "$src"
-  run_log ln -s "$src" "$tgt"
+  mv "$tgt" "$src"
+  ln -s "$src" "$tgt"
 }
 
 unsync() {
@@ -136,7 +134,7 @@ unsync() {
   [[ "$src" != "$KICH_SRC"* ]] && error "'$1' is not synced"
   [ ! -e "$src" ] && error "'$src' is not found"
   rm "$1"
-  run_log mv "$src" "$1"
+  mv "$src" "$1"
 }
 
 uninstall() {
