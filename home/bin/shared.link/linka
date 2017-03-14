@@ -4,11 +4,14 @@
 #exec 3>&2 2>trace.log
 #set -x
 
+set -euo pipefail
+
 base="$(git -C "`dirname "${BASH_SOURCE[0]}"`" rev-parse --show-toplevel)"
 dir="$base/home"
 
 abspath() {
-  [[ $1 = /* ]] && echo "$1" || echo "$PWD/${1#./}"
+  [ ! -e "$1" ] && exit_message "'$1' does not exist"
+  echo "$(cd "$(dirname "$1")" && pwd)/$(basename "$1")"
 }
 
 print0() {
@@ -24,10 +27,10 @@ find_filter() {
     shift
   fi
 
-  print0 <<< "$files" | xargs -0 -J {} find $mod {} -maxdepth 0 "$@" 2>/dev/null
+  print0 <<< "$files" | xargs -0 -J {} find ${mod-} {} -maxdepth 0 "$@" 2>/dev/null || true
 }
 
-as_home() {
+to_home() {
   sed -e "s;^$dir;$HOME;" -e "s/.link$//"
 }
 
@@ -47,6 +50,13 @@ as_sync() {
   fi
 }
 
+concat() {
+  for arg in "$@"; do
+    [ -n "$arg" ] && echo "$arg"
+  done
+  true
+}
+
 rm_files() {
   files="`concat "$@" | sort -u`"
   [ -z "$files" ] && return
@@ -57,22 +67,16 @@ rm_files() {
   print0 <<< "$files" | xargs -0 rm -rf
 }
 
-concat() {
-  for arg in "$@"; do
-    [ -n "$arg" ] && echo "$arg"
-  done
-}
-
 run_log() {
   echo "$@" && "$@"
 }
 
 git_historic_files() {
-  if [ -n "$1" ]; then
+  if [ -n "${1-}" ]; then
     arg="--max-count=$1"
   fi
 
-  git -C "$base" log --pretty=format: --name-only $arg | sed -e '/^ *$/d' -e "s;^;$base/;" | sort -u
+  git -C "$base" log --pretty=format: --name-only ${arg-} | sed -e '/^ *$/d' -e "s;^;$base/;" | sort -u
 }
 
 #find -L "$HOME" -not \( -not -path "$HOME" -prune \) -type l
@@ -88,18 +92,13 @@ exit_message() {
   exit 1
 }
 
-pwd() {
-  echo "$base"
-}
-
 install() {
-  dirnew="`find "$dir" -not \( -path '*.link' -prune \) -type d | as_home`"
-  links="`find "$dir" \( -type d -name '*.link' -prune \) -or -type f | as_home`"
-
+  dirnew="`find "$dir" -not \( -path '*.link' -prune \) -type d | to_home`"
+  links="`find "$dir" \( -type d -name '*.link' -prune \) -or -type f | to_home`"
 
   existdirs="`find_filter -not -type d <<< "$dirnew"`"
   existlinks="`find_filter -not -type l <<< "$links"`"
-  brokelinks="`git_historic_files | as_home | find_filter -L -type l`"
+  brokelinks="`git_historic_files | to_home | find_filter -L -type l`"
 
   rm_files "$existdirs" "$existlinks" "$brokelinks"
 
@@ -114,11 +113,9 @@ install() {
 
 sync() {
   file="`abspath $1`"
-  [ ! -e "$file" ] && exit_message "'$file' does not exist"
-  [ -L "$file" ] && exit_message "'$file' is a symlink"
+  [ -L "$file" ] && exit_message "'$1' is a symlink"
 
   sync="`as_sync "$file"`"
-  exit
   run_log mkdir -p "${sync%/*}"
   run_log mv "$file" "$sync"
   run_log ln -s "$sync" "$file"
@@ -126,19 +123,22 @@ sync() {
 
 reify() {
   file="`abspath $1`"
-  [ ! -L "$file" ] && exit_message "'$file' is not a symlink"
+  [ ! -L "$file" ] && exit_message "'$1' is not a symlink"
   sync="`readlink "$file"`"
-  [[ "$sync" != "$dir"* ]] && exit_message "'$file' is not synced"
+  [[ "$sync" != "$dir"* ]] && exit_message "'$1' is not synced"
   [ ! -e "$sync" ] && exit_message "'$sync' is not found"
-  run_log rm "$file"
-  run_log cp -R "$sync" "$file"
+  run_log rm "$1"
+  run_log cp -R "$sync" "$1"
 }
 
-case "$1" in
-  pwd|install|sync|reify)
+case "${1-}" in
+  install|sync|reify)
     command="$1"
     shift
     "$command" "$@"
+    ;;
+  pwd)
+    echo "$base"
     ;;
   "")
     install
