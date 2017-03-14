@@ -9,6 +9,18 @@ set -euo pipefail
 base="$(git -C "`dirname "${BASH_SOURCE[0]}"`" rev-parse --show-toplevel)"
 LINKA="$base/home"
 
+to_home() {
+  sed -e "s;^$LINKA;$HOME;" -e "s/.link$//"
+}
+
+tgt_dirs() {
+  find "$LINKA" -not \( -path '*.link' -prune \) -type d | to_home
+}
+
+tgt_links() {
+  find "$LINKA" \( -type d -name '*.link' -prune \) -or -type f -not -name ".keep" | to_home
+}
+
 abspath() {
   [ ! -e "$1" ] && exit_message "'$1' does not exist"
   echo "$(cd "$(dirname "$1")" && pwd)/$(basename "$1")"
@@ -30,11 +42,7 @@ find_filter() {
   print0 <<< "$files" | xargs -0 -J {} find ${mod-} {} -maxdepth 0 "$@" 2>/dev/null || true
 }
 
-to_home() {
-  sed -e "s;^$LINKA;$HOME;" -e "s/.link$//"
-}
-
-as_sync() {
+sync_from() {
   [[ "$1" != "$HOME"* ]] && exit_message "'$1' not in \$HOME"
   [[ "$1" == "$LINKA"* ]] && exit_message "'$1' already synced"
 
@@ -80,43 +88,36 @@ git_historic_files() {
   git -C "$base" log --pretty=format: --name-only ${arg-} | sed -e '/^ *$/d' -e "s;^;$base/;" | sort -u
 }
 
-#find -L "$HOME" -not \( -not -path "$HOME" -prune \) -type l
-
-exit_message() {
-  echo "$1" >&2
-}
-
-[[ "${BASH_SOURCE[0]}" != "${0}" ]] && return
-
 exit_message() {
   echo "$1" >&2
   exit 1
 }
 
 install() {
-  dirnew="`find "$LINKA" -not \( -path '*.link' -prune \) -type d | to_home`"
-  links="`find "$LINKA" \( -type d -name '*.link' -prune \) -or -type f -not -name ".keep" | to_home`"
+  # Can't assign ${:=} in herestring <<<
+  : "${tgt_dirs=`tgt_dirs`} ${tgt_links=`tgt_links`}"
 
-  existdirs="`find_filter -not -type d <<< "$dirnew"`"
-  existlinks="`find_filter -not -type l <<< "$links"`"
+  existdirs="`find_filter -not -type d <<< "$tgt_dirs"`"
+  existlinks="`find_filter -not -type l <<< "$tgt_links"`"
   brokelinks="`git_historic_files | to_home | find_filter -L -type l`"
 
   rm_files "$existdirs" "$existlinks" "$brokelinks"
 
   while read -r dst; do
+    # Existence check speeds things up...
     [ ! -e "$dst" ] && mkdir -p "$dst"
-  done <<< "$dirnew"
+  done <<< "$tgt_dirs"
 
   while read -r dst; do
-    [ ! -e "$dst" ] && run_log ln -s "`as_sync "$dst"`" "$dst"
-  done <<< "$links"
+    [ ! -e "$dst" ] && run_log ln -s "`sync_from "$dst"`" "$dst"
+  done <<< "$tgt_links"
 }
 
 sync() {
   file="`abspath $1`"
   [ -L "$file" ] && exit_message "'$1' is a symlink"
 
-  sync="`as_sync "$file"`"
+  sync="`sync_from "$file"`"
   mkdir -p "${sync%/*}"
   run_log mv "$file" "$sync"
   run_log ln -s "$sync" "$file"
@@ -133,10 +134,7 @@ unsync() {
 }
 
 uninstall() {
-  # TODO: DRY up
-  links="`find "$LINKA" \( -type d -name '*.link' -prune \) -or -type f -not -name ".keep" | to_home`"
-
-  rm_files "$links"
+  rm_files "${tgt_links=`tgt_links`}"
 }
 
 case "${1-}" in
