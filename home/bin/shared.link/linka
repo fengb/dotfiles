@@ -108,7 +108,7 @@ install() {
   done <<< "$dirnew"
 
   while read -r dst; do
-    [ ! -e "$dst" ] && ln -s "`as_sync "$dst"`" "$dst"
+    [ ! -e "$dst" ] && run_log ln -s "`as_sync "$dst"`" "$dst"
   done <<< "$links"
 }
 
@@ -132,8 +132,15 @@ unsync() {
   run_log mv "$sync" "$1"
 }
 
+uninstall() {
+  # TODO: DRY up
+  links="`find "$LINKA" \( -type d -name '*.link' -prune \) -or -type f -not -name ".keep" | to_home`"
+
+  rm_files "$links"
+}
+
 case "${1-}" in
-  install|sync|unsync)
+  install|sync|unsync|uninstall)
     command="$1"
     shift
     "$command" "$@"
