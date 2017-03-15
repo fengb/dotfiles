@@ -48,18 +48,18 @@ find_filter() {
 }
 
 src_from() {
-  [[ "$1" != "$KICH_TGT"* ]] && error "'$1' not in \$KICH_TGT"
+  [[ "$1" != "$KICH_TGT"* ]] && error "'$1' not in \$KICH_TGT ($KICH_TGT)"
   [[ "$1" == "$KICH_SRC"* ]] && error "'$1' already synced"
 
-  sync="${KICH_SRC}${1#"$KICH_TGT"}"
+  src="${KICH_SRC}${1#"$KICH_TGT"}"
   if [ -f "$1" ]; then
-    echo "$sync"
+    echo "$src"
   elif [ -d "$1" ]; then
-    echo "$sync.link"
-  elif [ -e "$sync" ]; then
-    echo "$sync"
+    echo "$src.link"
+  elif [ -e "$src" ]; then
+    echo "$src"
   else
-    echo "$sync.link"
+    echo "$src.link"
   fi
 }
 
@@ -118,21 +118,22 @@ install() {
 }
 
 sync() {
-  tgt="`abspath $1`"
-  [ -L "$tgt" ] && error "'$1' is a symlink"
+  [ ! -e "$1" ] && error "'$1' is not found"
+  [ -L "$1" ] && error "'$1' is a symlink"
 
-  src="`src_from "$tgt"`"
+  src="$(src_from "`abspath "$1"`")"
   mkdir -p "${src%/*}"
-  mv "$tgt" "$src"
-  ln -s "$src" "$tgt"
+  mv "$1" "$src"
+  ln -s "$src" "$1"
 }
 
 unsync() {
-  tgt="`abspath $1`"
-  [ ! -L "$tgt" ] && error "'$1' is not a symlink"
-  src="`readlink "$tgt"`"
+  [ ! -L "$1" ] && error "'$1' is not a symlink"
+
+  src="$(readlink "`abspath "$1"`")"
   [[ "$src" != "$KICH_SRC"* ]] && error "'$1' is not synced"
   [ ! -e "$src" ] && error "'$src' is not found"
+
   rm "$1"
   mv "$src" "$1"
 }
