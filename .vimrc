@@ -20,6 +20,10 @@ set listchars=tab:>-,trail:.
 set colorcolumn=81
 set hlsearch
 
+set path=.,**
+set wildmenu
+set wildignore=**/node_modules/**
+
 " window navigations
 map <C-h> <C-w>h
 map <C-j> <C-w>j
