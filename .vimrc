@@ -38,4 +38,5 @@ Plug 'https://github.com/digitaltoad/vim-pug.git', { 'for': 'pug' }
 Plug 'https://github.com/pangloss/vim-javascript.git', { 'for': 'javascript' }
 Plug 'https://github.com/mxw/vim-jsx.git', { 'for': 'jsx' }
 Plug 'https://github.com/elixir-lang/vim-elixir.git', { 'for': 'elixir', 'commit': '85593b118bae081538943640648e5d57f22f0aba' }
+Plug 'https://github.com/rust-lang/rust.vim.git', { 'for': 'rust' }
 call plug#end()

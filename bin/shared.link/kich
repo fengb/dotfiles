@@ -111,10 +111,14 @@ install() {
 
   while read -r dst; do
     if [ ! -e "$dst" ]; then
-      echo "⇋ $dst"
+      echo "⇋  $dst"
       ln -s "`src_from "$dst"`" "$dst"
     fi
   done <<< "$tgt_links"
+}
+
+ls() {
+  echo "${tgt_links=`tgt_links`}"
 }
 
 sync() {
@@ -147,7 +151,7 @@ src() {
 }
 
 case "${1-}" in
-  install|sync|unsync|uninstall|src)
+  install|sync|unsync|uninstall|src|ls)
     command="$1"
     shift
     "$command" "$@"
