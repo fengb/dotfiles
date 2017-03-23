@@ -1,0 +1,9 @@
+[user]
+	name = Benjamin Feng
+	email = contact@fengb.me
+[push]
+	default = current
+[alias]
+	why = blame
+[hub]
+	protocol = ssh
