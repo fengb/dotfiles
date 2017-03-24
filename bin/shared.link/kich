@@ -80,14 +80,6 @@ rm_files() {
   print0 <<< "$files" | xargs -0 rm -rf
 }
 
-git_historic_files() {
-  if [ -n "${1-}" ]; then
-    arg="--max-count=$1"
-  fi
-
-  git -C "$KICH_SRC" log --pretty=format: --name-only ${arg-} | sed -e '/^ *$/d' -e $'s;\.link/.*;;' -e "s;^;$KICH_SRC/;" | sort -u
-}
-
 error() {
   echo "kich: $1" >&2
   exit 1
@@ -100,7 +92,7 @@ install() {
 
   existdirs="`find_filter -not -type d <<< "$tgt_dirs"`"
   existlinks="`find_filter -not -type l <<< "$tgt_links"`"
-  brokelinks="`git_historic_files | to_tgt | find_filter -L -type l`"
+  brokelinks="`find_filter -L -type l <<< "$tgt_links"`"
 
   rm_files "$existdirs" "$existlinks" "$brokelinks"
 
@@ -115,10 +107,6 @@ install() {
       ln -s "`src_from "$dst"`" "$dst"
     fi
   done <<< "$tgt_links"
-}
-
-ls() {
-  echo "${tgt_links=`tgt_links`}"
 }
 
 sync() {
@@ -146,12 +134,24 @@ uninstall() {
   rm_files "${tgt_links=`tgt_links`}"
 }
 
-src() {
-  echo "$KICH_SRC"
+env() {
+  echo "KICH_SRC='$KICH_SRC'"
+  echo "KICH_TGT='$KICH_TGT'"
+  echo "KICH_EXCLUDE=\$'$KICH_EXCLUDE'"
+}
+
+ls() {
+  echo "${tgt_links=`tgt_links`}"
+}
+
+clean() {
+  find "$KICH_TGT" -lname "$KICH_SRC*" | while read link; do
+    [ ! -e "$link" ] && echo "rm $link" && rm "$link"
+  done
 }
 
 case "${1-}" in
-  install|sync|unsync|uninstall|src|ls)
+  install|sync|unsync|uninstall|env|ls|clean)
     command="$1"
     shift
     "$command" "$@"
