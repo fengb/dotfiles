@@ -6,11 +6,11 @@ exist() {
 }
 
 color() {
-  echo -n "\[\e[$1m\]"
+  printf "\[\e[$1m\]"
 }
 
 colorize() {
-  echo -n "$(color "$2")${1}$(color 0)"
+  printf "$(color "$2")${1}$(color 0)"
 }
 
 apply() {
