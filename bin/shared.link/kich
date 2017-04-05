@@ -150,7 +150,7 @@ ls() {
 }
 
 clean() {
-  brokelinks="`find "$KICH_TGT" -lname "$KICH_SRC*" | find_filter -L -type l`"
+  brokelinks="`find "$KICH_TGT" -type l -lname "$KICH_SRC*" | find_filter -L -type l`"
   rm_files "$brokelinks"
 }
 
