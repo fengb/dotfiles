@@ -9,6 +9,7 @@ set -euo pipefail
 : ${KICH_SRC="$(git -C "`dirname "${BASH_SOURCE[0]}"`" rev-parse --show-toplevel)"}
 : ${KICH_TGT="$HOME"}
 : ${KICH_IGNORE="`cat "$KICH_SRC/.kichignore" 2>/dev/null; echo .kichignore`"}
+: ${ORIG_IFS=$IFS}
 
 to_tgt() {
   sed -e "s;^$KICH_SRC;$KICH_TGT;" -e "s/.link$//"
@@ -20,12 +21,11 @@ or_names() {
 }
 
 src_find() {
-  if [ -z "$KICH_IGNORE" ]; then
-    find "$KICH_SRC" "$@"
-  else
-    : ${src_find_exclude="`or_names <<< "$KICH_IGNORE"`"}
-    print0 <<< "$src_find_exclude" | xargs -0 -J {} find "$KICH_SRC" -not \( \( {} \) -prune \) \( "$@" \)
-  fi
+  src_find_exclude="`or_names <<< "$KICH_IGNORE"`"
+
+  IFS=$'\n'
+  find "$KICH_SRC" -not \( \( $src_find_exclude \) -prune \) \( "$@" \)
+  IFS="$ORIG_IFS"
 }
 
 tgt_dirs() {
@@ -41,12 +41,9 @@ abspath() {
   echo "$(cd "$(dirname "$1")" && pwd)/$(basename "$1")"
 }
 
-print0() {
-  tr $'\r\n' "\0\0"
-}
-
 find_filter() {
   files="`cat`"
+
   [ -z "$files" ] && return
 
   if [ "$1" = "-L" ]; then
@@ -54,7 +51,9 @@ find_filter() {
     shift
   fi
 
-  print0 <<< "$files" | xargs -0 -J {} find ${mod-} {} -maxdepth 0 "$@" 2>/dev/null || true
+  IFS=$'\n'
+  find ${mod-} $files -maxdepth 0 "$@" 2>/dev/null || true
+  IFS="$ORIG_IFS"
 }
 
 src_from() {
@@ -83,11 +82,14 @@ concat() {
 rm_files() {
   files="`concat "$@" | sort -u`"
   [ -z "$files" ] && return
+
   echo "$files"
   read -p "About to delete [enter to continue]: "
   echo
 
-  print0 <<< "$files" | xargs -0 rm -rf
+  IFS=$'\n'
+  rm -rf $files
+  IFS="$ORIG_IFS"
 }
 
 error() {
@@ -106,17 +108,19 @@ install() {
 
   rm_files "$existdirs" "$existlinks" "$brokelinks"
 
-  while read -r dst; do
+  IFS=$'\n'
+  for dst in $tgt_dirs; do
     # Existence check speeds things up...
     [ ! -e "$dst" ] && mkdir -p "$dst"
-  done <<< "$tgt_dirs"
+  done
 
-  while read -r dst; do
+  for dst in $tgt_links; do
     if [ ! -e "$dst" ]; then
       echo "⇋  $dst"
       ln -s "`src_from "$dst"`" "$dst"
     fi
-  done <<< "$tgt_links"
+  done
+  IFS="$ORIG_IFS"
 }
 
 sync() {
