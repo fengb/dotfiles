@@ -8,19 +8,24 @@ set -euo pipefail
 
 : ${KICH_SRC="$(git -C "`dirname "${BASH_SOURCE[0]}"`" rev-parse --show-toplevel)"}
 : ${KICH_TGT="$HOME"}
-: ${KICH_EXCLUDE='.keep .DS_Store .git LICENSE'}
+: ${KICH_IGNORE="`cat "$KICH_SRC/.kichignore" 2>/dev/null; echo .kichignore`"}
 
 to_tgt() {
   sed -e "s;^$KICH_SRC;$KICH_TGT;" -e "s/.link$//"
 }
 
 or_names() {
-  sed -e 's/\([^ ]*\)/-or -name \1/g' -e 's/^-or //'
+  : ${NL=$'\\\n'}
+  sed -e '/^ *$/d' -e '1!'"s/^/-or$NL-name$NL/" -e "1s/^/-name$NL/"
 }
 
 src_find() {
-  : ${src_find_exclude="`or_names <<< "$KICH_EXCLUDE"`"}
-  find "$KICH_SRC" -mindepth 1 -not \( \( $src_find_exclude \) -prune \) \( "$@" \)
+  if [ -z "$KICH_IGNORE" ]; then
+    find "$KICH_SRC" "$@"
+  else
+    : ${src_find_exclude="`or_names <<< "$KICH_IGNORE"`"}
+    print0 <<< "$src_find_exclude" | xargs -0 -J {} find "$KICH_SRC" -not \( \( {} \) -prune \) \( "$@" \)
+  fi
 }
 
 tgt_dirs() {
@@ -49,7 +54,7 @@ find_filter() {
     shift
   fi
 
-  print0 <<< "$files" | xargs -0 -I {} find ${mod-} {} -maxdepth 0 "$@" 2>/dev/null || true
+  print0 <<< "$files" | xargs -0 -J {} find ${mod-} {} -maxdepth 0 "$@" 2>/dev/null || true
 }
 
 src_from() {
@@ -142,7 +147,7 @@ uninstall() {
 env() {
   echo "KICH_SRC='$KICH_SRC'"
   echo "KICH_TGT='$KICH_TGT'"
-  echo "KICH_EXCLUDE=\$'$KICH_EXCLUDE'"
+  echo "KICH_IGNORE='$KICH_IGNORE'"
 }
 
 ls() {
