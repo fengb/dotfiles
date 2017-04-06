@@ -9,7 +9,8 @@ set -euo pipefail
 : ${KICH_SRC="$(git -C "`dirname "${BASH_SOURCE[0]}"`" rev-parse --show-toplevel)"}
 : ${KICH_TGT="$HOME"}
 : ${KICH_IGNORE="`cat "$KICH_SRC/.kichignore" 2>/dev/null; echo .kichignore`"}
-: ${ORIG_IFS=$IFS}
+
+IFS=$'\n'
 
 to_tgt() {
   sed -e "s;^$KICH_SRC;$KICH_TGT;" -e "s/.link$//"
@@ -23,17 +24,15 @@ or_names() {
 src_find() {
   src_find_exclude="`or_names <<< "$KICH_IGNORE"`"
 
-  IFS=$'\n'
-  find "$KICH_SRC" -not \( \( $src_find_exclude \) -prune \) \( "$@" \)
-  IFS="$ORIG_IFS"
+  find "$KICH_SRC" \( $src_find_exclude \) -prune -or \( "$@" \) -print
 }
 
 tgt_dirs() {
-  src_find -not \( -path '*.link' -prune \) -type d | to_tgt
+  src_find -not \( -name '*.link' -prune \) -type d | to_tgt
 }
 
 tgt_links() {
-  src_find \( -path '*.link' -prune \) -or -type f | to_tgt
+  src_find -name '*.link' -prune -or -type f | to_tgt
 }
 
 abspath() {
@@ -42,18 +41,7 @@ abspath() {
 }
 
 find_filter() {
-  files="`cat`"
-
-  [ -z "$files" ] && return
-
-  if [ "$1" = "-L" ]; then
-    mod="$1"
-    shift
-  fi
-
-  IFS=$'\n'
-  find ${mod-} $files -maxdepth 0 "$@" 2>/dev/null || true
-  IFS="$ORIG_IFS"
+  find "$@" -maxdepth 0 2>/dev/null || true
 }
 
 src_from() {
@@ -87,9 +75,7 @@ rm_files() {
   read -p "About to delete [enter to continue]: "
   echo
 
-  IFS=$'\n'
   rm -rf $files
-  IFS="$ORIG_IFS"
 }
 
 error() {
@@ -102,13 +88,12 @@ install() {
   : ${tgt_dirs=`tgt_dirs`}
   : ${tgt_links=`tgt_links`}
 
-  existdirs="`find_filter -not -type d <<< "$tgt_dirs"`"
-  existlinks="`find_filter -not -type l <<< "$tgt_links"`"
-  brokelinks="`find_filter -L -type l <<< "$tgt_links"`"
+  existdirs="`find_filter $tgt_dirs -not -type d`"
+  existlinks="`find_filter $tgt_links -not -type l`"
+  brokelinks="`find_filter -L $tgt_links -type l`"
 
   rm_files "$existdirs" "$existlinks" "$brokelinks"
 
-  IFS=$'\n'
   for dst in $tgt_dirs; do
     # Existence check speeds things up...
     [ ! -e "$dst" ] && mkdir -p "$dst"
@@ -120,7 +105,6 @@ install() {
       ln -s "`src_from "$dst"`" "$dst"
     fi
   done
-  IFS="$ORIG_IFS"
 }
 
 sync() {
