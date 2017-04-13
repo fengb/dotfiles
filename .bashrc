@@ -2,7 +2,7 @@
 [ -z "$PS1" ] && return
 
 exist() {
-  command -v "$1" &>/dev/null 2>&1
+  command -v "$1" &>/dev/null
 }
 
 color() {
@@ -16,7 +16,7 @@ colorize() {
 apply() {
 export PS1="\u@$(colorize '\h' 35):$(colorize '\W' 34)$ "
 export LC_COLLATE=C
-local symlinkpaths=`find $HOME/bin -type l | tr "\n" ':'`
+local symlinkpaths="`find $HOME/bin -type l -depth 1 | paste -s -d : -`"
 export PATH="$HOME/bin:$symlinkpaths:$PATH"
 
 if (ls --color 2>/dev/null); then
