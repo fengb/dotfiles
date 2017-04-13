@@ -25,6 +25,8 @@ else
   alias "ls=ls -G"
 fi
 
+alias "ppid=ps -o ppid= -p"
+
 [ -x /usr/libexec/java_home ] && export JAVA_HOME=`/usr/libexec/java_home -F 2>/dev/null`
 
 if exist vim; then
