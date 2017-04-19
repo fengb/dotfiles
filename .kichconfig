@@ -1,0 +1,10 @@
+source="`readlink "${BASH_SOURCE[0]}" || echo "${BASH_SOURCE[0]}"`"
+
+KICH_SRC="$(cd "`dirname "$source"`" && pwd -P)"
+KICH_TGT="$HOME"
+KICH_IGNORE='
+  .DS_Store
+  .git
+  .keep
+  LICENSE
+'
