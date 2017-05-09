@@ -1,0 +1,27 @@
+#!/bin/bash
+
+function clean_containers {
+  docker ps -q -f STATUS=exited | xargs docker rm
+}
+
+function clean_images {
+  docker images -aq -f dangling=true | xargs docker rmi
+}
+
+function clean_volumes {
+  docker volume prune
+}
+
+function clean_networks {
+  docker network prune
+}
+
+case "$1" in
+  containers|images|volumes|networks)
+    "clean_$1"
+    ;;
+  *)
+    echo 'wat' >&2
+    exit 1
+    ;;
+esac
