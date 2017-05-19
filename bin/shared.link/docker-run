@@ -1,7 +1,21 @@
 #!/bin/bash
 
-[ ! -e docker-compose.yml ] && { echo "docker-bash: docker-compose.yml not found" >&2; exit 1; }
+if [ "$#" -eq 0 ] || [ "$1" = . ]; then
+  shift
 
-container="`sed -n -e 's/ *container_name: //p' docker-compose.yml | head -n 1`"
+  [ ! -e docker-compose.yml ] && { echo "docker-bash: docker-compose.yml not found" >&2; exit 1; }
 
-docker-compose run "$container" "$@"
+  container="`sed -n -e 's/ *container_name: //p' docker-compose.yml | head -n 1`"
+
+  if [ "$#" -eq 0 ]; then
+    docker-compose run "$container" bash
+  else
+    docker-compose run "$container" "$@"
+  fi
+else
+  if [ "$#" -eq 1 ]; then
+    docker run -it "$1" bash
+  else
+    docker run -it "$@"
+  fi
+fi
