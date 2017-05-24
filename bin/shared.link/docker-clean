@@ -1,7 +1,7 @@
 #!/bin/bash
 
 function clean_containers {
-  docker ps -q -f STATUS=exited | xargs docker rm
+  docker ps -aq -f STATUS=exited | xargs docker rm
 }
 
 function clean_images {
@@ -9,7 +9,7 @@ function clean_images {
 }
 
 function clean_volumes {
-  docker volume prune
+  docker volume -q -f dangling=true | xargs docker volume rm
 }
 
 function clean_networks {
