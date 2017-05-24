@@ -1,0 +1,13 @@
+// Place your settings in this file to overwrite the default settings
+{
+  "editor.autoClosingBrackets": false,
+  "editor.tabSize": 2,
+  "files.autoSave": "onFocusChange",
+  "files.exclude": {
+    "node_modules/": true
+  },
+  "files.trimTrailingWhitespace": true,
+  "files.insertFinalNewline": true,
+  "typescript.check.tscVersion": false,
+  "window.zoomLevel": 0
+}

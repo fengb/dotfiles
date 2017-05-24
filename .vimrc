@@ -40,4 +40,5 @@ Plug 'https://github.com/mxw/vim-jsx.git', { 'for': 'jsx' }
 Plug 'https://github.com/elixir-lang/vim-elixir.git', { 'for': 'elixir', 'commit': '85593b118bae081538943640648e5d57f22f0aba' }
 Plug 'https://github.com/rust-lang/rust.vim.git', { 'for': 'rust' }
 Plug 'https://github.com/fatih/vim-go.git', { 'for': 'go' }
+Plug 'https://github.com/leafgarland/typescript-vim', { 'for': 'typescript' }
 call plug#end()
