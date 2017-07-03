@@ -1,27 +1,48 @@
 #!/bin/bash
 
-function clean_containers {
+function containers {
   docker ps -aq -f STATUS=exited | xargs docker rm
 }
 
-function clean_images {
+function images {
   docker images -aq -f dangling=true | xargs docker rmi
 }
 
-function clean_volumes {
+function volumes {
   docker volume -q -f dangling=true | xargs docker volume rm
 }
 
-function clean_networks {
+function networks {
   docker network prune
 }
 
-case "$1" in
-  containers|images|volumes|networks)
-    "clean_$1"
-    ;;
-  *)
-    echo 'wat' >&2
-    exit 1
-    ;;
-esac
+function help {
+  echo 'usage: docker-clean <command> [<command>...]'
+  <"${BASH_SOURCE[0]}" \
+    sed -e '/^function /!d' \
+        -e 's/^function *\([a-zA-Z0-9_]*\) *{/    \1/'
+}
+
+if [ "$#" -eq 0 ]; then
+  help
+  exit 1
+fi
+
+while [ "$#" -gt 0 ]; do
+  command="$1"
+  shift
+
+  case "$command" in
+    c*) containers;;
+    i*) images;;
+    v*) volumes;;
+    n*) networks;;
+    a*) containers; images; volumes; networks;;
+    h*) help;;
+    *)
+      echo "docker-clean: '$command' unknown" >&2
+      help
+      exit 1
+      ;;
+  esac
+done
