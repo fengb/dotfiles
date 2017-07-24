@@ -1,5 +1,7 @@
 #!/bin/bash
 
+RUN_SH=(sh -c "command -v bash >/dev/null && exec bash || exec sh")
+
 if [ "$#" -eq 0 ] || [ "$1" = . ]; then
   shift
 
@@ -8,13 +10,13 @@ if [ "$#" -eq 0 ] || [ "$1" = . ]; then
   container="`sed -n -e 's/ *container_name: //p' docker-compose.yml | head -n 1`"
 
   if [ "$#" -eq 0 ]; then
-    docker-compose run "$container" bash
+    docker-compose run "$container" "${RUN_SH[@]}"
   else
     docker-compose run "$container" "$@"
   fi
 else
   if [ "$#" -eq 1 ]; then
-    docker run -it "$1" bash
+    docker run -it "$1" "${RUN_SH[@]}"
   else
     docker run -it "$@"
   fi
