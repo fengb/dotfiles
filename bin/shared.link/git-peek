@@ -1,0 +1,8 @@
+#!/bin/bash
+
+WORKDIR="$HOME/git-peek"
+
+target="`<<<"$1" sed -e 's#^[a-z]*://##' -e 's/\.git$//'`"
+
+git clone "$1" "$WORKDIR/$target"
+git --git-dir "$WORKDIR/$target/.git" log
