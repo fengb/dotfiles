@@ -9,5 +9,5 @@
   "files.trimTrailingWhitespace": true,
   "files.insertFinalNewline": true,
   "typescript.check.tscVersion": false,
-  "window.zoomLevel": 0
+  "vim.disableAnnoyingNeovimMessage": true
 }
