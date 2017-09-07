@@ -1,13 +1,24 @@
 #!/bin/sh
 
+function rebase_merge_commit {
+  branch=$1
+  git log -z --no-merges --format='--grep=%s' HEAD.."$branch" | xargs -0 git log --all-match
+}
 
 if [ -n "$1" ]; then
   remote="$1"
   tracking=`git rev-parse --abbrev-ref --symbolic-full-name @{u}`
   branches=`git branch -r --merged | sed -e "\:$remote:!d" -e "\:$tracking:d" -e "s:^ *$remote/::"`
-  git push "$remote" --delete $branches
-  git fetch "$remote" --prune
+  git push "$remote" --delete -- $branches
+  git fetch --prune -- "$remote"
 else
-  branches=`git branch --merged | grep '^[^*]'`
-  git branch --delete $branches
+  # Branches where all SHAs match (standard merge)
+  git branch --merged | grep '^[^*]' | xargs git branch --delete
+
+  # Branches where all commit messages appear (Github rebased merge)
+  git branch --list | grep '^[^*]' | while read branch; do
+    if [ -n "`rebase_merge_commit $branch`" ]; then
+      git branch --delete --force -- "$branch"
+    fi
+  done
 fi
