@@ -1,13 +1,56 @@
 #!/bin/bash
 
+SLEEP=1
 
-if [ "$1" == '-n' ]; then
-  shift
+function underline {
+  : ${UNDERLINE_B=`tput smul`}
+  : ${UNDERLINE_E=`tput rmul`}
+  echo "${UNDERLINE_B}${@}${UNDERLINE_E}"
+}
+
+function usage {
+  echo -e "\
+Usage: retry [options] [command]
+
+Options:
+\t-v\tinvert
+\t-n $(underline '[num]')
+\t\trepeat
+\t-s $(underline '[num]')
+\t\tsleep
+"
+  exit
+}
+
+while getopts ":hvn:s:" opt; do
+  case "$opt" in
+    v) INVERT="true";;
+    n) REPEAT="$OPTARG";;
+    s) SLEEP="$OPTARG";;
+    h) usage; exit;;
+    \?) echo "Invalid option: -$OPTARG" >&2; exit 1;;
+    :) echo "Option -$OPTARG requires an argument." >&2; exit 1;;
+  esac
+done
+
+shift $((OPTIND-1))
+
+if [ $# -eq 0 ]; then
+  usage
+  exit 1
+fi
+
+if [ -n "$REPEAT" ]; then
+  for i in `seq 1 "$REPEAT"`; do
+    $@
+    sleep "$SLEEP"
+  done
+elif [ -n "$INVERT" ]; then
   while $@; do
-    sleep 1
+    sleep "$SLEEP"
   done
 else
   while ! $@; do
-    sleep 1
+    sleep "$SLEEP"
   done
 fi
