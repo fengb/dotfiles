@@ -7,3 +7,5 @@
 	why = blame
 [hub]
 	protocol = ssh
+[fetch]
+	prune = true
