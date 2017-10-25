@@ -5,6 +5,8 @@ KICH_TGT="$HOME"
 KICH_IGNORE='
   .DS_Store
   .git
+  .gitmodules
   .keep
   LICENSE
+  submodules
 '
