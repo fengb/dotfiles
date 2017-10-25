@@ -1,5 +1,15 @@
 #!/bin/bash
 
+function usage {
+  echo 'usage: docker-clean <command> [<command>...]'
+  <"${BASH_SOURCE[0]}" \
+    sed -n -e 's:^  *\([a-z]\)\*) *\([a-z]*\);;$:	\1 - \2:p'
+}
+
+function all {
+  containers && images && volumes && networks
+}
+
 function containers {
   docker ps -aq -f STATUS=exited | xargs docker rm
 }
@@ -9,22 +19,15 @@ function images {
 }
 
 function volumes {
-  docker volume -q -f dangling=true | xargs docker volume rm
+  docker volume ls -q -f dangling=true | xargs docker volume rm
 }
 
 function networks {
   docker network prune
 }
 
-function help {
-  echo 'usage: docker-clean <command> [<command>...]'
-  <"${BASH_SOURCE[0]}" \
-    sed -e '/^function /!d' \
-        -e 's/^function *\([a-zA-Z0-9_]*\) *{/    \1/'
-}
-
 if [ "$#" -eq 0 ]; then
-  help
+  usage
   exit 1
 fi
 
@@ -33,15 +36,15 @@ while [ "$#" -gt 0 ]; do
   shift
 
   case "$command" in
+    h*|u*) usage;;
     c*) containers;;
     i*) images;;
     v*) volumes;;
     n*) networks;;
-    a*) containers; images; volumes; networks;;
-    h*) help;;
+    a*) all;;
     *)
-      echo "docker-clean: '$command' unknown" >&2
-      help
+      echo "docker-clean: '$command' is not a clean option" >&2
+      usage
       exit 1
       ;;
   esac
