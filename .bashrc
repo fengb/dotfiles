@@ -13,11 +13,9 @@ colorize() {
   printf "$(color "$2")${1}$(color 0)"
 }
 
-apply() {
 export PS1="\u@$(colorize '\h' 35):$(colorize '\W' 34)$ "
 export LC_COLLATE=C
-local symlinkpaths="`find $HOME/bin -type l -depth 1 | paste -s -d : -`"
-export PATH="$HOME/bin:$symlinkpaths:$PATH"
+export PATH="$(find -L $HOME/bin -maxdepth 1 -type d | paste -s -d : -):$PATH"
 
 if (ls --color 2>/dev/null); then
   alias "ls=ls --color"
@@ -27,7 +25,7 @@ fi
 
 alias "ppid=ps -o ppid= -p"
 
-[ -x /usr/libexec/java_home ] && export JAVA_HOME=`/usr/libexec/java_home -F 2>/dev/null`
+[ -x /usr/libexec/java_home ] && export JAVA_HOME="`/usr/libexec/java_home -F 2>/dev/null`"
 
 if exist vim; then
   alias "vi=vim"
@@ -36,12 +34,12 @@ else
   export EDITOR=vi
 fi
 
-local script
-for script in "$HOME/.bashrc_shared"/* "$HOME/.bashrc_local"; do
-  [ -r "$script" ] && source "$script"
+for _t_script in "$HOME/.bashrc_shared"/* "$HOME/.bashrc_local"; do
+  [ -r "$_t_script" ] && source "$_t_script"
 done
 
 # Make bash check its window size after a process completes
 shopt -s checkwinsize
 
-}; apply; unset apply
+# Delete temporary variables
+unset ${!_t_*}
