@@ -1,0 +1,36 @@
+@font-face {
+  font-family: "Arial";
+  src: local("Helvetica");
+}
+
+@font-face {
+  font-family: "Arial";
+  font-style: italic;
+  src: local("Helvetica Oblique");
+}
+
+@font-face {
+  font-family: "Arial";
+  font-weight: 300;
+  src: local("Helvetica Light");
+}
+
+@font-face {
+  font-family: "Arial";
+  font-weight: 300;
+  font-style: italic;
+  src: local("Helvetica Light Oblique");
+}
+
+@font-face {
+  font-family: "Arial";
+  font-weight: bold;
+  src: local("Helvetica Bold");
+}
+
+@font-face {
+  font-family: "Arial";
+  font-weight: bold;
+  font-style: italic;
+  src: local("Helvetica Bold Oblique");
+}
