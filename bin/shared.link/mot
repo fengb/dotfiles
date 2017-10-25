@@ -1,0 +1,35 @@
+#!/usr/bin/env perl
+
+use warnings;
+use File::Basename;
+
+if (fork()) {
+  exec @ARGV;
+}
+
+my $name = basename(__FILE__);
+my $ppid = getppid;
+
+$0 = "$name @ARGV [PID $ppid]";
+
+sub cpu_usage {
+  my @res = qx[ps -p $ppid -o %cpu];
+  return $res[1] + 0;
+}
+
+sleep 1;
+my $kill_at = 0;
+while (kill 0, $ppid) {
+  if (cpu_usage($ppid) < 95) {
+    $kill_at = 0;
+  } elsif ($kill_at == 0) {
+    $kill_at = time + 1;
+  } elsif ($kill_at <= time) {
+    kill "TERM", $ppid;
+    sleep 10;
+    # Really kill if it doesn't respond
+    kill "ABRT", $ppid;
+  }
+
+  sleep 15;
+}
