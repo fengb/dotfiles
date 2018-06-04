@@ -14,12 +14,15 @@ $0 = "$name @ARGV [PID $ppid]";
 
 sub cpu_usage {
   my @res = qx[ps -p $ppid -o %cpu];
+  if ($? != 0) {
+    exit;
+  }
+
   return $res[1] + 0;
 }
 
-sleep 1;
 my $kill_at = 0;
-while (kill 0, $ppid) {
+while (sleep 15) {
   if (cpu_usage($ppid) < 95) {
     $kill_at = 0;
   } elsif ($kill_at == 0) {
@@ -30,6 +33,4 @@ while (kill 0, $ppid) {
     # Really kill if it doesn't respond
     kill "ABRT", $ppid;
   }
-
-  sleep 15;
 }
