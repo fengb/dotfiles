@@ -1,0 +1,24 @@
+#!/bin/bash
+
+set -eou pipefail
+
+pids=($@)
+
+signals=(TERM HUP INT QUIT ABRT)
+
+filter_pids() {
+  ps -o pid= -p "$@"
+}
+
+for signal in "${signals[@]}"; do
+  if [ "${#pids[@]}" -eq 0 ]; then
+    exit
+  fi
+
+  echo "murder - $signal - ${pids[@]}"
+  kill -s "$signal" "${pids[@]}"
+  sleep 1
+  pids=($(filter_pids "${pids[@]}"))
+done
+
+echo "murder - hanging - ${pids[@]}"
