@@ -1,1 +1,0 @@
-../submodules/chruby/share/chruby/chruby.sh
