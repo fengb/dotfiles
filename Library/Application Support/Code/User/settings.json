@@ -1,13 +1,65 @@
 // Place your settings in this file to overwrite the default settings
 {
-  "editor.autoClosingBrackets": false,
+  "editor.autoClosingBrackets": "never",
+  "editor.minimap.enabled": false,
   "editor.tabSize": 2,
-  "files.autoSave": "onFocusChange",
   "files.exclude": {
     "node_modules/": true
   },
   "files.trimTrailingWhitespace": true,
   "files.insertFinalNewline": true,
-  "typescript.check.tscVersion": false,
-  "vim.disableAnnoyingNeovimMessage": true
+  "breadcrumbs.enabled": true,
+  "files.autoSave": "onWindowChange",
+  "window.title": "${rootName}${separator}${activeEditorMedium}",
+  "typescript.updateImportsOnFileMove.enabled": "always",
+  "emmet.showExpandedAbbreviation": "never",
+  "[typescriptreact]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[typescript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[javascript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[jsonc]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[javascriptreact]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "typescript.disableAutomaticTypeAcquisition": true,
+  "workbench.startupEditor": "none",
+  "vscode-neovim.neovimExecutablePaths.darwin": "/opt/homebrew/bin/nvim",
+  "editor.fontFamily": "Inconsolata, 'Andale Mono', Monaco, monospace",
+  "editor.fontSize": 14,
+  "editor.renderWhitespace": "all",
+  "editor.autoClosingDelete": "never",
+  "editor.autoClosingOvertype": "never",
+  "editor.autoClosingQuotes": "never",
+  "editor.autoSurround": "never",
+  "html.autoClosingTags": false,
+  "[handlebars]": {
+    "editor.defaultFormatter": "embertooling.prettier-for-handlebars-vscode"
+  },
+  "window.nativeFullScreen": false,
+  "js/ts.implicitProjectConfig.experimentalDecorators": true,
+  "eslint.workingDirectories": [
+    { "mode": "auto" }
+  ],
+  "extensions.ignoreRecommendations": true,
+  "editor.quickSuggestions": {
+    "other": "off",
+    "comments": "off",
+    "strings": "off"
+  },
+  "editor.acceptSuggestionOnCommitCharacter": false,
+  "editor.inlineSuggest.enabled": false,
+  "terminal.integrated.defaultProfile.osx": "bash",
+  "html.autoCreateQuotes": false,
+  "javascript.updateImportsOnFileMove.enabled": "always",
+  "window.autoDetectColorScheme": true,
+  "[json]": {
+    "editor.defaultFormatter": "vscode.json-language-features"
+  }
 }
