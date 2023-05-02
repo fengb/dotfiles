@@ -15,7 +15,13 @@ colorize() {
 
 export PS1="\u@$(colorize '\h' 35):$(colorize '\W' 34)$ "
 export LC_COLLATE=C
-export PATH="$(find -L $HOME/bin -maxdepth 1 -type d | paste -s -d : -):$PATH"
+export PATH="$([ -d "$HOME/bin" ] && { find -L "$HOME/bin" -depth 1 -type d | xargs readlink; echo "$HOME/bin"; } | paste -s -d : -):$PATH"
+export LS_COLORS='ex=00:su=00:sg=00:ca=00:'
+export HOMEBREW_NO_AUTO_UPDATE=1
+export HOMEBREW_NO_INSTALL_CLEANUP=1
+export BASH_SILENCE_DEPRECATION_WARNING=1
+
+alias "bashrc-reset=source ~/.bashrc"
 
 if (ls --color 2>/dev/null); then
   alias "ls=ls --color"
@@ -25,16 +31,30 @@ fi
 
 alias "ppid=ps -o ppid= -p"
 
-[ -x /usr/libexec/java_home ] && export JAVA_HOME="`/usr/libexec/java_home -F 2>/dev/null`"
+export JAVA_HOME="$(/usr/libexec/java_home -F 2>/dev/null)"
 
-if exist vim; then
+if exist nvim; then
+  alias "vi=nvim"
+  alias "vim=nvim"
+  export EDITOR=vim
+elif exist vim; then
   alias "vi=vim"
   export EDITOR=vim
 else
   export EDITOR=vi
 fi
 
-for _t_script in "$HOME/.bashrc_shared"/* "$HOME/.bashrc_local"; do
+if exist sysctl; then
+  export CPUS="$(sysctl -n hw.ncpu)"
+else
+  export CPUS="$(nproc --all)"
+fi
+
+alias m8ke="make -j $CPUS"
+
+export ASDF_DATA_DIR="/opt/asdf"
+
+for _t_script in "$HOME/.bashrc_shared"/* "$HOME/.asdf/asdf.sh" "$HOME/.asdf/completions/asdf.bash" "$HOME/.nix-profile/etc/profile.d/nix.sh" "$HOME/.bashrc_local"; do
   [ -r "$_t_script" ] && source "$_t_script"
 done
 

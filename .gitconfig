@@ -3,9 +3,13 @@
 	email = contact@fengb.me
 [push]
 	default = current
+[merge]
+	defaultToUpstream = true
 [alias]
-	why = blame
-[hub]
-	protocol = ssh
+	huh = annotate
 [fetch]
 	prune = true
+[hub]
+	protocol = ssh
+[include]
+	path = .gitconfig_local
