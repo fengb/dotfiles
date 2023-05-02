@@ -19,7 +19,7 @@ function images {
 }
 
 function volumes {
-  docker volume ls -q -f dangling=true | xargs docker volume rm
+  docker volume prune -f
 }
 
 function networks {

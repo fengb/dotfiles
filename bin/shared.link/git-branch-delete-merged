@@ -13,10 +13,10 @@ if [ -n "$1" ]; then
   git fetch --prune -- "$remote"
 else
   # Branches where all SHAs match (standard merge)
-  git branch --merged | grep '^[^*]' | xargs git branch --delete
+  git branch --merged | grep '^[^*+]' | xargs git branch --delete
 
   # Branches where all commit messages appear (Github rebased merge)
-  git branch --list | grep '^[^*]' | while read branch; do
+  git branch --list | grep '^[^*+]' | while read branch; do
     if [ -n "`rebase_merge_commit $branch`" ]; then
       git branch --delete --force -- "$branch"
     fi

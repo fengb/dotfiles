@@ -8,8 +8,8 @@ search() {
   eexec rg -l "$@"
   eexec ag -l "$@"
   eexec ack -l "$@"
-  eexec egrep -Rl "$@" .
-  eexec grep -Rl "$@" .
+  eexec egrep -Rl "$@"
+  eexec grep -Rl "$@"
 }
 
 panic() {
@@ -20,5 +20,6 @@ panic() {
 [[ $1 == s/*/*/* ]] || panic "rr: Search must be in the form s/[search]/[replace]/[args]"
 term=${1#s/}
 term=${term%/*/*}
+shift
 
-search "$term" | xargs -P 4 perl -i -pe "$1"
+search "$term" "$@" | xargs -P 4 perl -i -pe "$1"

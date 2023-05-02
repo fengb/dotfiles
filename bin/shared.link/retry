@@ -42,15 +42,15 @@ fi
 
 if [ -n "$REPEAT" ]; then
   for i in `seq 1 "$REPEAT"`; do
-    $@
+    "$@"
     sleep "$SLEEP"
   done
 elif [ -n "$INVERT" ]; then
-  while $@; do
+  while "$@"; do
     sleep "$SLEEP"
   done
 else
-  while ! $@; do
+  while ! "$@"; do
     sleep "$SLEEP"
   done
 fi

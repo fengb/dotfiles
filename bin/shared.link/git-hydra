@@ -1,9 +1,9 @@
 #!/bin/bash
 
-find . -name '*.git' | while read gitmeta; do
+find . -maxdepth 2 -name '*.git' | while read gitmeta; do
   dir="${gitmeta%/.git}"
   pushd "$dir" >/dev/null
-  echo "$PWD$$ git $@"
+  echo "$PWD\$ git $@"
   git "$@"
   popd >/dev/null
 done

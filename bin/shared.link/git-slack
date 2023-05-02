@@ -1,0 +1,11 @@
+#!/bin/bash
+
+REF=${1:-origin/production}
+
+repo=$(git remote -v | sed -e '/.*github.*fetch.*/!d' -e 's#.*\(github.com\):\([^.]*\)\..*#\1/\2#')
+sha='[0-9a-f]*'
+msg='.*'
+pr='[0-9]*'
+
+echo "*$repo*"
+git log --no-merges --oneline "$REF^..$REF" | sed -e "s~^$sha \($msg\) (#\($pr\))\$~\1 - https://$repo/pull/\2~"

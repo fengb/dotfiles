@@ -1,0 +1,14 @@
+#!/bin/bash
+
+: ${dir="app"}
+: ${name="*.js"}
+: ${search='from ".*/$basefile.*"'}
+
+find "$dir" -name "$name" -type f -print0 | while IFS= read -r -d '' file; do
+  noext="${file%.*}"
+  basefile="${noext##*/}"
+  this_search="${search//\$basefile/$basefile}"
+  if ! rg --quiet "$this_search" "$dir"; then
+    echo "$file"
+  fi
+done

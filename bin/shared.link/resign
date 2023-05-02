@@ -1,0 +1,22 @@
+#!/bin/bash
+
+IPA="/path/to/file.ipa"
+PROVISION="/path/to/file.mobileprovision"
+CERTIFICATE="Name of certificate: To sign with" # must be in keychain
+OUT="resigned.ipa"
+
+#if [[ $IPA =~ ^https?: ]]; then
+#fi
+
+TMPDIR=$(mktemp -d)
+
+unzip "$IPA" -d "$TMPDIR"
+
+APP_FOLDER="$TMPDIR/Payload/*.app"
+rm -rf "$APP_FOLDER/_CodeSignature"
+cp "$PROVISION" "$APP_FOLDER/embedded.mobileprovision"
+codesign -d --entitlements - "$APP_FOLDER" > "$TMPDIR/entitlements.plist"
+codesign -f -s "$CERTIFICATE" --entitlements "$TMPDIR/entitlements.plist" "$APP_FOLDER"
+zip -qr "$OUT" "$TMPDIR/Payload"
+
+rm -rf "$TMPDIR"

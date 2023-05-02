@@ -2,9 +2,9 @@
 
 
 if [ -z $1 ]; then
-  git branch | sed 's;^\** *;;'
+  git branch | grep -v '^[*+]'
 elif [ "$1" = -a ]; then
-  git branch -a | sed 's;^\** *;;'
+  git branch -a | grep -v '^[*+]'
 else
   remote="$1"
   git branch -r | grep "^ *$remote" | sed "s;^ *$remote/;;"

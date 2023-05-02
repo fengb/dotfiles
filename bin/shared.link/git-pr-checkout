@@ -1,4 +1,9 @@
 #!/bin/bash
 
-git fetch origin +refs/pull/$1/head:refs/origin/pull/$1
-git checkout origin/pull/$1
+if [ "$#" -gt 1 ]; then
+  git fetch "$1" "+refs/pull/$2/head:refs/$1/pull/$2"
+  git checkout "$1/pull/$2"
+else
+  git fetch origin "+refs/pull/$1/head:refs/origin/pull/$1"
+  git checkout "origin/pull/$1"
+fi

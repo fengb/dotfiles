@@ -1,0 +1,42 @@
+#!/usr/bin/env bash
+
+#
+# Compare the contents of two Docker images.
+#
+# Usage:
+#   docker-diff alpine:3.4 alpine:3.5
+#
+
+if [ -z "$2" ]
+then
+  echo "Usage: $0 img1 img2"
+  echo ""
+  echo "Example: $0 alpine:3.4 alpine:3.5"
+  echo "If you set IGNORE_FILESIZE to 1, file sizes will be ignored."
+  exit 99
+fi
+
+TEST_IMAGE='busybox'
+if [ $(docker images -q ${TEST_IMAGE} | wc -l) -lt 1 ]
+then
+    docker pull ${TEST_IMAGE}
+fi
+
+CONTAINER_A_ID=$(docker create $1 /bin/sh)
+CONTAINER_B_ID=$(docker create $2 /bin/sh)
+
+if [[ ${IGNORE_FILESIZE} == 1 ]]
+then
+    AWK_STATEMENT='{printf "%-10s %-100s\n",$1,$6}'
+else
+    AWK_STATEMENT='{printf "%-10s %-10s %-100s\n",$1,$3,$6}'
+fi
+
+diff \
+ <(docker export ${CONTAINER_A_ID} | docker run -i --rm ${TEST_IMAGE} tar tvf - | awk "${AWK_STATEMENT}") \
+ <(docker export ${CONTAINER_B_ID} | docker run -i --rm ${TEST_IMAGE} tar tvf - | awk "${AWK_STATEMENT}")
+code=$?
+
+docker rm -fv ${CONTAINER_A_ID} ${CONTAINER_B_ID} > /dev/null
+
+exit $code

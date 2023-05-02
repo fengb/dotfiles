@@ -1,15 +1,16 @@
 #!/bin/bash
 
 if [ "$#" -gt 0 ] && [ "$1" != . ]; then
-  name=$1
+  run=(docker exec -it "$1")
 else
-  name="$(sed -n -e 's/ *container_name: //p' docker-compose.yml | head -n 1)"
+  name="$(sed -n '/^ *services:/{n;s@^ *\([a-zA-Z0-9_-]*\): *$@\1@;p;}' docker-compose.yml)"
+  run=(docker-compose exec "$name")
 fi
 
 shift
 
 if [ "$#" -eq 0 ]; then
-  exec docker exec -it "$name" sh -c "command -v bash >/dev/null && exec bash || exec sh"
+  exec "${run[@]}" sh -c "command -v bash >/dev/null && exec bash || exec sh"
 else
-  exec docker exec -it "$name" "$@"
+  exec "${run[@]}" "$@"
 fi
